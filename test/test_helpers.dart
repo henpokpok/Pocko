@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/theme/app_theme.dart';
 import 'package:travmate/services/hybrid_ai/hybrid_ai_service.dart';
@@ -16,6 +17,7 @@ Future<ProviderContainer> pumpPocko(
   double bottomInset = 0,
   bool scaffold = true,
   HybridAiService? ai,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -29,6 +31,7 @@ Future<ProviderContainer> pumpPocko(
   final container = ProviderContainer(
     overrides: [
       hybridAiServiceProvider.overrideWithValue(ai ?? testAiService()),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);

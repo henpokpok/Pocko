@@ -76,26 +76,32 @@ void main() {
   });
 
   testWidgets(
-    'Join dialog validates the 6-digit code and reports offline mode',
+    'Join sheet validates the 6-digit code and reports offline mode',
     (tester) async {
       final container = await pump(tester);
 
       await tester.tap(find.text('Join Group'));
       await settle(tester, 500);
-      await tester.enterText(find.byType(TextField), '12');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Join Group'));
+      await tester.enterText(
+        find.byKey(const ValueKey('join_code_field')),
+        '12',
+      );
+      await tester.tap(find.byKey(const ValueKey('join_submit_button')));
       await tester.pump();
       expect(
-        find.text('Enter the 6-digit group code (e.g. 782-901)'),
+        find.textContaining('Enter the 6-digit group code (e.g. 782-901)'),
         findsOneWidget,
       );
 
-      await tester.enterText(find.byType(TextField), '999 001');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Join Group'));
+      await tester.enterText(
+        find.byKey(const ValueKey('join_code_field')),
+        '999 001',
+      );
+      await tester.tap(find.byKey(const ValueKey('join_submit_button')));
       await settle(tester, 700);
       expect(container.read(tripControllerProvider).squadCode, '999-001');
       expect(
-        find.textContaining('Saved group 999-001 locally'),
+        find.textContaining('Group sync is not available'),
         findsOneWidget,
       );
     },

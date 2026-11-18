@@ -21,6 +21,11 @@ class TelemetryPill extends StatelessWidget {
   /// Render for dark overlays (capture screen).
   final bool onDark;
 
+  /// Demo-friendly wording that says plainly how the capture was processed:
+  /// `☁️ Cloud Gemini • gemini-3.1-flash-lite`, `🟢 On-Device • Gemini Nano`
+  /// or `📴 Offline fallback • local parser`.
+  final bool plain;
+
   const TelemetryPill({
     super.key,
     required this.source,
@@ -29,13 +34,28 @@ class TelemetryPill extends StatelessWidget {
     this.simulated = false,
     this.compact = false,
     this.onDark = false,
+    this.plain = false,
   });
 
-  String get _emoji => source == InferenceSource.onDevice
+  String get _emoji => plain && simulated
+      ? '📴'
+      : source == InferenceSource.onDevice
       ? '🟢'
       : (source == InferenceSource.inCloud ? '☁️' : '✏️');
 
+  /// `gemini-3.1-flash-lite (Firebase AI Logic Cloud)` -> `gemini-3.1-flash-lite`.
+  String get _cloudModel {
+    final info = (modelInfo ?? '').trim();
+    final model = info.split(' (').first.trim();
+    return model.toLowerCase().startsWith('gemini') ? model : 'Gemini';
+  }
+
   String get _title {
+    if (plain) {
+      if (simulated) return 'Offline fallback';
+      if (source == InferenceSource.inCloud) return 'Cloud Gemini';
+      if (source == InferenceSource.onDevice) return 'On-Device';
+    }
     switch (source) {
       case InferenceSource.onDevice:
         return 'On-Device';
@@ -59,6 +79,16 @@ class TelemetryPill extends StatelessWidget {
 
     final label = compact
         ? (ms != null ? '$_emoji $ms ms' : _emoji)
+        : plain
+        ? [
+            '$_emoji $_title',
+            if (simulated)
+              'local parser'
+            else if (source == InferenceSource.inCloud)
+              _cloudModel
+            else if (source == InferenceSource.onDevice)
+              source.engineLabel(modelInfo),
+          ].join(' • ')
         : [
             '$_emoji $_title',
             if (source != InferenceSource.manual) source.engineLabel(modelInfo),

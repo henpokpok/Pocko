@@ -23,12 +23,22 @@ enum SyncStatus {
 }
 
 /// Normalizes user input such as `782901`, `782 901` or `782-901` into `782-901`.
+/// Also accepts a pasted invite link (`pocko://join/782-901`,
+/// `https://pocko.app/join/782901`, "Join my trip: ... 782-901").
 /// Returns `null` when the input is not a 6-digit group code.
 String? normalizeSquadCode(String input) {
+  // A full "NNN-NNN" / "NNN NNN" / "NNNNNN" group somewhere in the text wins,
+  // so ports, dates or other numbers in a link are ignored.
+  final match = RegExp(r'(?<!\d)(\d{3})[\s\-]?(\d{3})(?!\d)').firstMatch(input);
+  if (match != null) return '${match.group(1)}-${match.group(2)}';
   final digits = input.replaceAll(RegExp(r'[^0-9]'), '');
   if (digits.length != 6) return null;
   return '${digits.substring(0, 3)}-${digits.substring(3)}';
 }
+
+/// The shareable invite text for a group: a deep-link style URL plus the code.
+String squadInviteLink(String squadCode) =>
+    'pocko://join/${squadCode.replaceAll('-', '')}';
 
 class TripState {
   final Trip trip;
@@ -51,6 +61,11 @@ class TripState {
   final DateFilter dateFilter;
   final SyncStatus syncStatus;
 
+  /// `false` for the placeholder state of a fresh install that has not created
+  /// or joined a trip yet. The [trip] is then a harmless stand-in (one member,
+  /// no expenses, a valid currency) so no screen ever meets a null trip.
+  final bool hasTrip;
+
   const TripState({
     required this.trip,
     this.squadCode = '782-901',
@@ -63,6 +78,7 @@ class TripState {
     this.selectedFilterCategory,
     this.dateFilter = const DateFilter.all(),
     this.syncStatus = SyncStatus.offline,
+    this.hasTrip = true,
   });
 
   TripState copyWith({
@@ -78,6 +94,7 @@ class TripState {
     bool clearCategoryFilter = false,
     DateFilter? dateFilter,
     SyncStatus? syncStatus,
+    bool? hasTrip,
   }) {
     return TripState(
       trip: trip ?? this.trip,
@@ -93,8 +110,38 @@ class TripState {
           : (selectedFilterCategory ?? this.selectedFilterCategory),
       dateFilter: dateFilter ?? this.dateFilter,
       syncStatus: syncStatus ?? this.syncStatus,
+      hasTrip: hasTrip ?? this.hasTrip,
     );
   }
+
+  /// The placeholder for a device that has no trip yet (fresh install).
+  factory TripState.placeholder({required String squadCode}) {
+    final now = DateTime.now();
+    return TripState(
+      trip: Trip(
+        id: 'no_trip',
+        name: '',
+        baseCurrency: 'USD',
+        homeCurrency: 'USD',
+        members: const [
+          TripMember(id: 'you', name: 'You', isCurrentUser: true),
+        ],
+        expenses: const [],
+        createdAt: now,
+        startDate: DateTime(now.year, now.month, now.day),
+      ),
+      squadCode: squadCode,
+      hasTrip: false,
+    );
+  }
+
+  /// The trip exists but its first day is still in the future.
+  bool get isUpcoming =>
+      hasTrip && startOfDay(trip.startDate).isAfter(startOfDay(DateTime.now()));
+
+  /// Home shows the welcoming placeholder instead of the live dashboard: no
+  /// trip at all, or only a trip that has not started yet.
+  bool get hasNoActiveTrip => !hasTrip || isUpcoming;
 
   /// Ids of transfers that were paid (kept for UI/test compatibility).
   Set<String> get settledTransferIds => settlements.map((s) => s.id).toSet();

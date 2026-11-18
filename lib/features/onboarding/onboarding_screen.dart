@@ -4,12 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../services/session/session_store.dart';
+import '../squad/join_group_sheet.dart';
 import '../trip/trip_controller.dart';
 import 'first_trip_setup_card.dart';
 import 'story_scenes.dart';
 import 'trip_destinations.dart';
 
-/// Whether the landing / setup experience has been completed this session.
+/// Whether the landing / setup experience is done. It starts `true` once the
+/// Landing Page was seen on an earlier launch (`has_seen_landing`), so later
+/// launches go straight to Home; Settings can replay it for demo recordings.
 final onboardingCompleteProvider =
     NotifierProvider<OnboardingCompleteNotifier, bool>(
       OnboardingCompleteNotifier.new,
@@ -17,9 +21,22 @@ final onboardingCompleteProvider =
 
 class OnboardingCompleteNotifier extends Notifier<bool> {
   @override
-  bool build() => false;
+  bool build() => ref.read(sessionStoreProvider)?.hasSeenLanding ?? false;
 
-  void complete() => state = true;
+  /// The landing was used (trip created, group joined, demo started or
+  /// skipped): never show it automatically again.
+  void complete() {
+    state = true;
+    ref.read(sessionStoreProvider)?.setHasSeenLanding(true);
+  }
+
+  /// "Replay Landing Page": shows the landing again and clears the saved flag
+  /// without touching the trip, the local storage, the Firebase user or the
+  /// App Check debug token.
+  void replay() {
+    state = false;
+    ref.read(sessionStoreProvider)?.setHasSeenLanding(false);
+  }
 }
 
 /// Shows the landing story first and the live app once a trip is ready, with
@@ -145,6 +162,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     widget.onDone();
   }
 
+  Future<void> _joinGroup() async {
+    final joined = await showJoinGroupSheet(context);
+    if (joined == true && mounted) widget.onDone();
+  }
+
+  Widget _landingAction(
+    Key key,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
+    return TextButton.icon(
+      key: key,
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: AppTheme.primaryEmeraldDark,
+        minimumSize: const Size(0, 44),
+        textStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final onSetup = _page == _setupPage;
@@ -263,22 +307,57 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 ),
                               ),
                             ),
-                          TextButton.icon(
-                            key: const ValueKey('demo_trip_button'),
-                            onPressed: _tryDemo,
-                            icon: const Icon(
-                              Icons.rocket_launch_rounded,
-                              size: 18,
-                            ),
-                            label: const Text('Try Tokyo Demo Trip'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.primaryEmeraldDark,
-                              minimumSize: const Size(0, 48),
-                              textStyle: GoogleFonts.plusJakartaSans(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            children: [
+                              if (!onSetup)
+                                _landingAction(
+                                  const ValueKey('create_trip_button'),
+                                  Icons.flight_takeoff_rounded,
+                                  'Get Started',
+                                  () => _goTo(_setupPage),
+                                ),
+                              _landingAction(
+                                const ValueKey('join_group_button'),
+                                Icons.group_add_rounded,
+                                'Join Group',
+                                _joinGroup,
                               ),
-                            ),
+                              _landingAction(
+                                const ValueKey('demo_trip_button'),
+                                Icons.rocket_launch_rounded,
+                                'Try Tokyo Demo Trip',
+                                _tryDemo,
+                              ),
+                              if (!widget.startAtSetup)
+                                Builder(
+                                  builder: (context) {
+                                    final hasTrip = ref.watch(
+                                      tripControllerProvider.select(
+                                        (t) => t.hasTrip,
+                                      ),
+                                    );
+                                    return _landingAction(
+                                      ValueKey(
+                                        hasTrip
+                                            ? 'landing_back_to_trip'
+                                            : 'landing_skip_button',
+                                      ),
+                                      Icons.arrow_back_rounded,
+                                      hasTrip
+                                          ? 'Back to my trip'
+                                          : 'Skip for now',
+                                      () => ref
+                                          .read(
+                                            onboardingCompleteProvider.notifier,
+                                          )
+                                          .complete(),
+                                    );
+                                  },
+                                ),
+                            ],
                           ),
                         ],
                       ),

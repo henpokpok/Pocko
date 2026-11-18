@@ -32,7 +32,7 @@ flowchart LR
 ```
 
 ### 🚀 Landing Story & First-Trip Setup (`lib/features/onboarding/`)
-Shown on every cold start by `OnboardingGate` (the app has no stored trip yet), with a soft cross-fade / scale into the live app. The same flow opens from **Manage Group ➔ New Trip / Setup Wizard** (straight on the setup card).
+Shown by `OnboardingGate` **only on the very first launch** (`has_seen_landing`, see *First launch, session and replay* below; Settings can replay it), with a soft cross-fade / scale into the live app. The same flow opens from **Manage Group ➔ New Trip / Setup Wizard** (straight on the setup card).
 
 1. **Illustrated 3-scene story** (`OnboardingScreen` + [`story_scenes.dart`](../lib/features/onboarding/story_scenes.dart)): a swipeable `PageView` where each page leads with an animated, painted scene (`CustomPainter` + layered cards, one looping clock, **no blur filters**) starring a large Pocko, then an entrance-animated headline and feature chips. Dots, **Next** / **Skip**.
    * **Speak offline in 3s** (*Log live while traveling*): a striped café awning, string lights and a steaming ramen bowl; an **Offline** chip, a speech bubble whose waveform turns into the typed bill (`Ramen 1,200 yen with Maya`) and a `✓ Logged in 3s` confirmation, with a listening Pocko.
@@ -49,6 +49,20 @@ Shown on every cold start by `OnboardingGate` (the app has no stored trip yet), 
 * **Keyboard-aware landing:** while the soft keyboard is open (`MediaQuery.viewInsets.bottom > 0`) the footer (dots, *Next*, *Try Tokyo Demo Trip*) is hidden instead of floating above the keyboard, so the setup form keeps the room.
 * **Flags in the destination picker:** each destination carries its country flag (`🇯🇵 Japan (¥ JPY)`, `🇰🇷 South Korea (₩ KRW)`, `🇪🇺 Europe (€ EUR)`, plus Taiwan `TWD` and Hong Kong `HKD`).
 * **Smooth tab switches:** the four tabs live in an `IndexedStack`; each is wrapped in `RepaintBoundary` and `TickerMode(enabled: isCurrentTab)`, so hidden tabs run no mascot / count-up tickers, and the cards, the donut and the expense list repaint independently (still zero `BackdropFilter`).
+
+### Groups, names and concurrency-safe sync
+* **Join Group everywhere:** the Landing Page, the empty Home, Settings and Manage Group all open the same `showJoinGroupSheet`: pick the name friends will see, then a 6-digit code **or a pasted invite link** (`pocko://join/782901`; `normalizeSquadCode` extracts the code from any text). An unknown code is "not found" (no group is silently created). Names are made unique ("Maya 2"); the chosen name is remembered for the next group.
+* **Rename at any time** (`TripController.renameMember`, Settings or the pencil in Manage Group; anyone renames themselves, the Host renames anyone): only `TripMember.name` changes. `ExpenseItem.payerId`, `splitWithMemberIds`, `customSplits` and `SettlementPayment.fromMemberId / toMemberId` all hold the immutable member id, so every old bill, balance, transfer and view shows the new name at once and no split math or ownership changes. The capture sheet reads the roster fresh on each capture, so the cloud prompt and the offline parser / normalizer never use a stale name.
+* **Schema 2 trip document** ([`cloud_trip_view.dart`](../lib/services/sync/cloud_trip_view.dart)): members, expenses and repayments are **maps keyed by id** (`memberMap`, `expenseMap`, `settlementMap`). Each device keeps a baseline of the cloud state and writes only the **difference** with field-path updates (`expenseMap.<id>`, `memberMap.<id>.name`, a new `memberMap.<id>` for a join), so concurrent edits to different entries never overwrite each other (the earlier whole-document `set` could erase a join or rename). A trip is created with one full write; an existing document of unknown state (after a restart) only receives entries it lacks, in a transaction; offline it falls back to a merging write. Legacy array documents are still readable and are migrated by a full write.
+
+### First launch, session and replay
+`SessionStore` (`shared_preferences`) keeps `has_seen_landing`, the chosen display name and the current trip session. The illustrated Landing Page shows only on the first launch (Get Started, Join Group, Try Demo, Skip for now); later launches open straight on Home with the saved trip. **Settings → Replay Landing Page** clears only the flag and shows the landing again (with "Back to my trip"), leaving the trip, local storage, the Firebase anonymous user and the App Check debug token untouched, so demo takes can be repeated without re-registering a token.
+
+### Placeholder Home and the null-trip guard
+A fresh install holds a harmless placeholder (`TripState.hasTrip == false`: one member, no expenses, a valid currency), never a null trip. When there is no trip, or only a trip whose start date is in the future (`TripState.hasNoActiveTrip`), Home shows a welcoming placeholder with **Create a New Trip** and **Join Existing Group**, plus a quiet *Upcoming* card with "View trip" when one is scheduled. `ensureTrip` guards the `+` capture button, Add Expense and the Receipt / Slip upload with a "Create or join a trip first" prompt, and `addExpenses` ignores calls without a trip. (The app holds one trip at a time, so "upcoming trips" means that trip.)
+
+### AI source indicator
+The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1480 ms`, `🟢 On-Device • Gemini Nano`, or `📴 Offline fallback • local parser`.
 
 ### 🏠 Tab 0: Home (`TripHomeScreen`)
 * **Trip Summary Hero Card:** A mint-to-sky card with an animated, tabular total (e.g. `¥56,700`), the live USD conversion (`~$378 USD`), live **Per person** and **Still owed** chips, an always-fresh date range computed from the real expense dates, and a Pocko whose mood reflects the trip (napping when empty, celebrating when everyone is square).
@@ -506,13 +520,13 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 
 ### 🧗 Challenges We Ran Into
 * **Unifying Three On-Device AI Runtimes:** Android uses AICore/ML Kit, iOS uses Apple Foundation Models, and Chrome uses the W3C Prompt API. We designed a clean unified `MethodChannel` and `dart:js_interop` interface returning consistent telemetry maps across all platforms: `{ rawJson, inferenceSource, latencyMs, modelInfo }`.
-* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 545 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
+* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 606 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
 * **Token Budget Optimization:** Early prompt prototypes occasionally caused on-device LLMs to truncate JSON output. We engineered a compact `<200-word` prompt template that guarantees responses stay under 512 tokens while supporting chained multi-expense sentences.
 
 ### 🏆 Accomplishments We're Proud Of
 * **Fast local inference:** on supported hardware, on-device parsing typically lands in the tens of milliseconds to ~110ms with zero cloud API cost (the telemetry pill shows the real number for every request).
 * **100% Offline Resilience:** You can put your device into Airplane Mode, record multiple expenses in voice or text, and watch Pocko parse, categorize, and calculate balances seamlessly.
-* **100% Green Test Suite:** 545 unit, service, controller and widget tests (38 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
+* **100% Green Test Suite:** 606 unit, service, controller and widget tests (41 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
 * **Delightful Emotional Design:** Our animated Pocko character turns bill-splitting from a chore into a joyful travel companion.
 
 ### 📚 What We Learned

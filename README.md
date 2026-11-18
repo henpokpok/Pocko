@@ -5,7 +5,7 @@
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-545%2F545%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-606%2F606%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -236,17 +236,17 @@ flowchart TD
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
 | **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & ReCAPTCHA v3 protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 38 test suites (545 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 41 test suites (606 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 38 test suites (545 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 41 test suites (606 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +545: All tests passed!
+flutter test      # 00:08 +606: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
@@ -276,9 +276,28 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `editor_redesign_and_perf_test` | Redesigned expense sheet (currency pill inside Amount, themed date / time pickers, searchable Category + Paid By selectors, Equal Split vs Custom Amounts with live total and validation), Receipt / Slip photo (camera + gallery via an injectable picker, preview, full screen, remove, permission errors), landing footer hidden while the keyboard is open, country flags in the destination picker, hidden tabs run no tickers |
 | `gemini_audio_capture_test` | **Gemini voice pipeline**: `transcript` + `items` parsing (blank transcript is `null`, fenced JSON, normalizer repairs keep the transcript), the audio prompt, `SilenceDetector` (3.5 s of dead air only after speech, adaptive threshold), WAV header for Web, one uninterrupted recording with no restarts, long mid-sentence pauses, Stop, too-short clips, offline / denied-permission fallback to `speech_to_text`, the verbatim transcript saved as the Original Voice Prompt, plus Kotlin / Swift / JS / permission wiring and `en_US` + dictation mode |
 | `voice_dictation_test` | **Continuous voice dictation**: `DictationBuffer` appends Android / iOS segments (`"Eat ramen with Maya"` + pause + `"mine 1200 Maya 1800 yen"` keeps every word), never duplicates Web cumulative transcripts, whole-word prefix guard, manual edit / Clear sync; a scripted `SpeechEngine` proves the automatic listen restart after a segment ends, the 3.5 s dead-air timer (reset only by new words, not by echoes), Stop analyzes at once, `no_match` restarts while permission errors stop, the Clear chip |
+| `sync_field_level_test` | **Concurrency-safe sync**: only changed entries are written (`expenseMap.<id>`, `memberMap.<id>.name`...), a join / rename / new expense from three devices all survive, a restarted device only adds (never deletes or overwrites), schema 2 round trip, key-order-proof comparison, legacy documents |
+| `members_and_session_test` | **Renaming keeps every bill intact** (ids never change, balances / splits / repayments identical, validation, host vs guest), the AI and offline parser see the new names on every capture, **Join Group** with a chosen name (unique names, invite links, not-found, from a placeholder), local session restore and `has_seen_landing` |
+| `placeholder_landing_test` | **First-launch-only landing** (Get Started / Join Group / Demo / Skip), replay from Settings without wiping storage, placeholder Home (fresh install and upcoming-only trip), **null-trip crash guards** (`+`, Add Expense, Receipt Scan), Settings and rename UI, the AI source badge, iPad 11" portrait and landscape |
 | `telemetry_and_mascot_test`, `pocko_mascot_test` | Telemetry pill variants, all six mascot moods animating, blink schedule |
 
 All widget tests run with the simulated engine and zero latency (`hybridAiServiceProvider` override), so they are deterministic offline.
+
+## 🚢 Release builds for demo recording
+
+Profile and release builds open straight from the home screen (debug builds on iOS 14+ only run while attached to Flutter / Xcode). They normally use the production App Check providers, which need Play Integrity / DeviceCheck set up in Firebase. For developer devices keep the **debug provider** with `--dart-define=APP_CHECK_DEBUG=true` and register the printed debug token once (Firebase console → App Check → Apps → Manage debug tokens). The token is kept as long as the app's data is not cleared; use **Settings → Replay Landing Page** to repeat the intro for a take without wiping anything.
+
+```bash
+# Android (APK for a phone: sideload with adb)
+flutter build apk --release --dart-define=APP_CHECK_DEBUG=true
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+
+# iOS / iPadOS (signed with your team; the device needs Developer Mode on and the developer profile trusted)
+flutter build ios --release --dart-define=APP_CHECK_DEBUG=true
+xcrun devicectl device install app --device <device-id> build/ios/iphoneos/Runner.app
+```
+
+Store builds omit the flag and use the production providers.
 
 ## 🚀 Getting Started & Local Setup
 

@@ -11,6 +11,8 @@ import '../../core/widgets/pocko_snack.dart';
 import '../../core/widgets/tactile.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../trip/trip_controller.dart';
+import 'join_group_sheet.dart';
+import 'rename_member_sheet.dart';
 import '../trip/trip_permissions.dart';
 import '../trip/trip_state.dart';
 
@@ -81,105 +83,6 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
               ElevatedButton(
                 onPressed: submit,
                 child: const Text('Add Friend'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showJoinSquadDialog(BuildContext context) {
-    final controller = TextEditingController();
-    String? error;
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          Future<void> submit() async {
-            final code = normalizeSquadCode(controller.text);
-            if (code == null) {
-              setDialogState(
-                () => error = 'Enter the 6-digit group code (e.g. 782-901)',
-              );
-              return;
-            }
-            Navigator.pop(ctx);
-            final result = await ref
-                .read(tripControllerProvider.notifier)
-                .joinSquad(code);
-            if (!context.mounted) return;
-            switch (result) {
-              case JoinSquadResult.joined:
-                showPockoSnack(
-                  context,
-                  '🎉 Connected to group $code. Your friends\' expenses are live.',
-                );
-              case JoinSquadResult.created:
-                showPockoSnack(
-                  context,
-                  'Created group $code. Share the code so friends can join.',
-                );
-              case JoinSquadResult.offline:
-                showPockoSnack(
-                  context,
-                  'Saved group $code locally. Live sync starts once Firebase is configured.',
-                );
-              case JoinSquadResult.invalid:
-                showPockoSnack(
-                  context,
-                  'That is not a valid group code.',
-                  success: false,
-                );
-            }
-          }
-
-          return AlertDialog(
-            shape: _dialogShape,
-            title: Text(
-              'Join Group by Code',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Enter the 6-digit group code from your friend\'s device (e.g. 782-901) to sync expenses in real time:',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: AppTheme.textSlate,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9 \-]')),
-                  ],
-                  onSubmitted: (_) => submit(),
-                  onChanged: (_) => setDialogState(() => error = null),
-                  decoration: InputDecoration(
-                    hintText: 'e.g. 782-901',
-                    errorText: error,
-                    prefixIcon: const Icon(
-                      Icons.hub_rounded,
-                      color: AppTheme.primaryEmerald,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: submit,
-                child: const Text('Join Group'),
               ),
             ],
           );
@@ -663,7 +566,11 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                                         ),
                                       ),
                                     Text(
-                                      isMe ? 'This device' : 'Active',
+                                      isMe
+                                          ? (member.name.toLowerCase() == 'you'
+                                                ? 'This device'
+                                                : 'This device • ${member.name}')
+                                          : 'Active',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
@@ -674,6 +581,28 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                                     ),
                                   ],
                                 ),
+                                if (isMe || perms.canRemoveMembers)
+                                  IconButton(
+                                    key: ValueKey('rename_${member.id}'),
+                                    tooltip: isMe
+                                        ? 'Change your name'
+                                        : 'Rename ${member.name}',
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(
+                                      Icons.edit_rounded,
+                                      size: 15,
+                                      color: AppTheme.textMuted,
+                                    ),
+                                    onPressed: () => showRenameMemberSheet(
+                                      context,
+                                      member.id,
+                                    ),
+                                  ),
                                 if (!isMe && perms.canRemoveMembers) ...[
                                   const SizedBox(width: 6),
                                   IconButton(
@@ -782,7 +711,7 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                               Clipboard.setData(
                                 ClipboardData(
                                   text:
-                                      'Join my Pocko trip "${trip.name}" with group code ${tripState.squadCode}',
+                                      'Join my Pocko trip "${trip.name}": ${squadInviteLink(tripState.squadCode)} (group code ${tripState.squadCode})',
                                 ),
                               );
                               showPockoSnack(
@@ -844,7 +773,7 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                               ),
                             ),
                             Tactile(
-                              onTap: () => _showJoinSquadDialog(context),
+                              onTap: () => showJoinGroupSheet(context),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,

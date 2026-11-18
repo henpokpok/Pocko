@@ -6,10 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../features/trip/trip_state.dart';
-import '../../models/expense_item.dart';
 import '../../models/settlement_payment.dart';
 import '../../models/trip.dart';
-import '../../models/trip_member.dart';
+import 'cloud_trip_view.dart';
 
 class TripStateUpdate {
   final Trip trip;
@@ -57,7 +56,19 @@ class SquadSyncService {
   CollectionReference<Map<String, dynamic>>? get _tripsCollection =>
       _firestore?.collection('trips');
 
-  /// Publishes local trip state to Cloud Firestore under the 6-digit Group Code
+  /// What this device knows the cloud document to contain, per group code:
+  /// updated from every server snapshot, every fetch and every write of ours.
+  /// Writes are the *difference* between this and the new local state.
+  final Map<String, CloudTripView> _baselines = {};
+
+  /// Publishes local trip state to Cloud Firestore under the 6-digit Group Code.
+  ///
+  /// Concurrency-safe: only the entries that changed since the last known
+  /// cloud state are written (`expenseMap.<id>`, `memberMap.<id>.name`...), so a
+  /// join, a rename or an expense from another device is never overwritten.
+  /// A trip that does not exist yet is created with one full write; an
+  /// existing document of unknown state (just after a restart) only receives
+  /// the entries it is missing (additive, in a transaction).
   Future<void> syncTripToCloud(TripState state, {String? writerId}) async {
     final code = state.squadCode.trim();
     if (code.isEmpty) return;
@@ -71,34 +82,73 @@ class SquadSyncService {
         return;
       }
       final docRef = trips.doc(code);
-      final payload = {
-        'id': state.trip.id,
-        'name': state.trip.name,
-        'baseCurrency': state.trip.baseCurrency,
-        'homeCurrency': state.trip.homeCurrency,
-        'squadCode': code,
-        'createdAt': state.trip.createdAt.toIso8601String(),
-        'startDate': state.trip.startDate.toIso8601String(),
+      final after = CloudTripView.fromState(state);
+      final meta = <String, Object?>{
         'updatedAt': FieldValue.serverTimestamp(),
         'writerId': writerId,
-        'members': state.trip.members
-            .map((m) => {'id': m.id, 'name': m.name})
-            .toList(),
-        'hostUid': state.trip.hostUid,
-        'lockGuestEdits': state.trip.lockGuestEdits,
-        ...fitImagesToDocument(
-          expenses: state.trip.expenses.map((e) => e.toJson()).toList(),
-          settlements: state.settlements.map((s) => s.toJson()).toList(),
-        ),
       };
+      final baseline = _baselines[code];
 
-      // Full replace (no merge) so deleted expenses/members really disappear.
-      await docRef.set(payload);
+      if (baseline == null) {
+        _baselines[code] = await _firstWrite(docRef, after, meta);
+      } else {
+        final changes = after.diffFrom(baseline);
+        if (changes.isEmpty) return;
+        await docRef.update({
+          for (final c in changes)
+            FieldPath(c.path): c.delete ? FieldValue.delete() : c.value,
+          ...meta,
+        });
+        _baselines[code] = baseline.applying(changes);
+      }
       debugPrint('[SquadSyncService] Synced trip to cloud for code: $code');
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') {
+        // The document vanished: recreate it from scratch.
+        _baselines.remove(state.squadCode.trim());
+        return syncTripToCloud(state, writerId: writerId);
+      }
+      debugPrint('[SquadSyncService] Sync failed (${e.code}): ${e.message}');
     } catch (e) {
       debugPrint(
         '[SquadSyncService] Offline or unconfigured Firestore sync: $e',
       );
+    }
+  }
+
+  Future<CloudTripView> _firstWrite(
+    DocumentReference<Map<String, dynamic>> docRef,
+    CloudTripView after,
+    Map<String, Object?> meta,
+  ) async {
+    try {
+      return await _firestore!.runTransaction<CloudTripView>((tx) async {
+        final snap = await tx.get(docRef);
+        final remote = snap.exists ? CloudTripView.fromDoc(snap.data()!) : null;
+        if (remote == null) {
+          // New trip (or an old array-style document): one full write.
+          tx.set(docRef, {...after.toDocument(), ...meta});
+          return after;
+        }
+        final adds = after.additiveFrom(remote);
+        if (adds.isNotEmpty) {
+          tx.update(docRef, {
+            for (final c in adds) FieldPath(c.path): c.value,
+            ...meta,
+          });
+        }
+        return remote.applying(adds);
+      });
+    } on FirebaseException catch (e) {
+      // Transactions need a connection. Offline-first: queue a merging write
+      // instead (entries are added or replaced by id; nothing is deleted), so
+      // a trip created offline still reaches the cloud later.
+      if (e.code != 'unavailable' && e.code != 'deadline-exceeded') rethrow;
+      await docRef.set({
+        ...after.toDocument(),
+        ...meta,
+      }, SetOptions(merge: true));
+      return after;
     }
   }
 
@@ -110,7 +160,6 @@ class SquadSyncService {
   /// limit. When the JSON would be too large the biggest photos are left out
   /// of the *cloud copy* (every device keeps its own local photos, and the
   /// controller merges them back when a snapshot arrives).
-  @visibleForTesting
   static Map<String, dynamic> fitImagesToDocument({
     required List<Map<String, dynamic>> expenses,
     required List<Map<String, dynamic>> settlements,
@@ -173,7 +222,18 @@ class SquadSyncService {
           .map((snapshot) {
             final data = snapshot.data();
             if (!snapshot.exists || data == null) {
+              _baselines.remove(code);
               return null;
+            }
+            // Pending local snapshots already contain our own writes, whose
+            // baseline was updated when they were issued.
+            if (!snapshot.metadata.hasPendingWrites) {
+              final view = CloudTripView.fromDoc(data);
+              if (view == null) {
+                _baselines.remove(code);
+              } else {
+                _baselines[code] = view;
+              }
             }
             return deserializeTrip(
               data,
@@ -206,6 +266,14 @@ class SquadSyncService {
       if (!snapshot.exists || data == null) {
         return null;
       }
+      // Remember the cloud state we joined, so our first write is a small
+      // field-level update instead of a full overwrite.
+      final view = CloudTripView.fromDoc(data);
+      if (view == null) {
+        _baselines.remove(code);
+      } else {
+        _baselines[code] = view;
+      }
       return deserializeTrip(data, code);
     } catch (e) {
       debugPrint('[SquadSyncService] Fetch trip error: $e');
@@ -213,54 +281,16 @@ class SquadSyncService {
     }
   }
 
-  /// Pure deserializer (public for unit tests). Tolerates missing fields.
+  /// Pure deserializer (public for unit tests). Tolerates missing fields and
+  /// reads both document schemas (2 = maps keyed by id, 1 = legacy arrays).
   @visibleForTesting
   static TripStateUpdate deserializeTrip(
     Map<String, dynamic> data,
     String fallbackCode, {
     bool hasPendingWrites = false,
-  }) {
-    final members = ((data['members'] as List?) ?? const [])
-        .whereType<Map>()
-        .map((m) {
-          final map = Map<String, dynamic>.from(m);
-          return TripMember(
-            id: map['id']?.toString() ?? 'unknown',
-            name: map['name']?.toString() ?? 'Friend',
-          );
-        })
-        .toList();
-
-    final expenses = ((data['expenses'] as List?) ?? const [])
-        .whereType<Map>()
-        .map((e) => ExpenseItem.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
-
-    final settlements = ((data['settlements'] as List?) ?? const [])
-        .whereType<Map>()
-        .map((s) => SettlementPayment.fromJson(Map<String, dynamic>.from(s)))
-        .toList();
-
-    final trip = Trip(
-      id: data['id']?.toString() ?? 'trip_$fallbackCode',
-      name: data['name']?.toString() ?? 'Shared Trip',
-      baseCurrency: data['baseCurrency']?.toString() ?? 'JPY',
-      homeCurrency: data['homeCurrency']?.toString() ?? 'USD',
-      members: members,
-      expenses: expenses,
-      createdAt:
-          DateTime.tryParse(data['createdAt']?.toString() ?? '') ??
-          DateTime.now(),
-      startDate: DateTime.tryParse(data['startDate']?.toString() ?? ''),
-      hostUid: data['hostUid']?.toString(),
-      lockGuestEdits: data['lockGuestEdits'] == true,
-    );
-
-    return TripStateUpdate(
-      trip: trip,
-      settlements: settlements,
-      writerId: data['writerId']?.toString(),
-      hasPendingWrites: hasPendingWrites,
-    );
-  }
+  }) => CloudTripView.deserialize(
+    data,
+    fallbackCode,
+    hasPendingWrites: hasPendingWrites,
+  );
 }

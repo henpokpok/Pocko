@@ -14,6 +14,7 @@ import '../../models/settlement_transfer.dart';
 import '../../models/trip.dart';
 import '../../models/trip_member.dart';
 import '../../services/identity/device_identity.dart';
+import '../../services/session/session_store.dart';
 import '../../services/sync/squad_sync_service.dart';
 import 'date_filter.dart';
 import 'trip_permissions.dart';
@@ -37,6 +38,10 @@ enum JoinSquadResult {
 
   /// The code is not a 6-digit group code.
   invalid,
+
+  /// No group exists under that code (only returned when the caller asked not
+  /// to create one, as the Join Group sheet does).
+  notFound,
 }
 
 class TripController extends Notifier<TripState> {
@@ -76,27 +81,62 @@ class TripController extends Notifier<TripState> {
     _disposed = false;
     ref.onDispose(() {
       _disposed = true;
+      _saveTimer?.cancel();
       _syncSubscription?.cancel();
     });
 
+    final store = ref.read(sessionStoreProvider);
+    final restored = store?.loadSession();
+
     // Every install gets its own group code so unrelated devices never write to
     // the same Firestore document.
-    final initial = _hostedBy(
-      TripState.initial(squadCode: generateSquadCode()),
-    );
+    final TripState initial;
+    if (restored != null) {
+      // Next launches open straight on the trip this device was in.
+      initial = TripState(
+        trip: restored.trip,
+        squadCode: restored.squadCode.isEmpty
+            ? generateSquadCode()
+            : restored.squadCode,
+        currentMemberId: restored.currentMemberId,
+        settlements: restored.settlements,
+        hasTrip: restored.hasTrip,
+      );
+    } else if (store != null) {
+      // A real install with no trip yet: a harmless placeholder, never a
+      // null trip. Home shows the welcoming "create or join" state.
+      initial = TripState.placeholder(squadCode: generateSquadCode());
+    } else {
+      initial = _hostedBy(TripState.initial(squadCode: generateSquadCode()));
+    }
     final stateWithBalances = _withCalculatedBalances(initial);
+
+    // Keep the saved session in step with every change (debounced).
+    if (store != null) {
+      listenSelf((previous, next) => _scheduleSave(store, next));
+    }
 
     // Attach real-time cloud sync listener after the initial state is returned.
     // The controller is built lazily, so a wizard / demo / join call may already
     // have subscribed to a newer code by the time this runs. Only attach when
-    // nothing else has, and always to the *current* code.
+    // nothing else has, and always to the *current* code. A placeholder (no
+    // trip yet) has nothing to listen to.
     Future.microtask(() {
-      if (!_disposed && _syncSubscription == null) {
+      if (!_disposed && _syncSubscription == null && state.hasTrip) {
         _listenToSync(state.squadCode);
       }
     });
 
     return stateWithBalances;
+  }
+
+  Timer? _saveTimer;
+
+  void _scheduleSave(SessionStore store, TripState next) {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!_disposed) store.saveSession(next);
+    });
   }
 
   /// Generates a fresh `NNN-NNN` group code.
@@ -273,7 +313,8 @@ class TripController extends Notifier<TripState> {
   void addExpense(ExpenseItem item) => addExpenses([item]);
 
   void addExpenses(List<ExpenseItem> items) {
-    if (items.isEmpty) return;
+    // No trip yet (fresh install placeholder): there is nothing to add to.
+    if (items.isEmpty || !state.hasTrip) return;
     final used = state.trip.expenses.map((e) => e.id).toSet();
     final cleaned = <ExpenseItem>[];
     for (final item in items) {
@@ -425,6 +466,63 @@ class TripController extends Notifier<TripState> {
       ),
     );
     return null;
+  }
+
+  /// Longest display name accepted.
+  static const int maxNameLength = 24;
+
+  /// Renames a traveler. Only the **name** changes: expenses, splits, custom
+  /// amounts and repayments all point at the member's immutable `id`, so every
+  /// historical bill, balance and view shows the new name at once and no split
+  /// math or ownership changes. Returns an error message, or `null` on success.
+  ///
+  /// Anyone may rename themselves; the Host may rename anyone.
+  String? renameMember(String memberId, String newName) {
+    final clean = newName.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final member = state.memberById(memberId);
+    if (member == null) return 'That traveler is no longer in the group.';
+    if (!state.hasTrip) return 'Create or join a trip first.';
+    final isSelf = memberId == state.currentMemberId;
+    if (!isSelf && !_permissions.canRemoveMembers) {
+      return 'Only you or the Trip Host can rename this traveler.';
+    }
+    if (clean.isEmpty) return 'Enter a name.';
+    if (clean.length > maxNameLength) {
+      return 'Keep the name under $maxNameLength characters.';
+    }
+    final lower = clean.toLowerCase();
+    if (lower == member.name.toLowerCase()) {
+      if (clean == member.name) return null;
+    } else if (const {'you', 'me', 'myself', 'i'}.contains(lower)) {
+      return 'Pick a name other than "$clean".';
+    }
+    final taken = state.trip.members.any(
+      (m) => m.id != memberId && m.name.toLowerCase() == lower,
+    );
+    if (taken) return 'Someone in this group already uses that name.';
+
+    _commit(
+      state.copyWith(
+        trip: state.trip.copyWith(
+          members: [
+            for (final m in state.trip.members)
+              m.id == memberId ? m.copyWith(name: clean) : m,
+          ],
+        ),
+      ),
+    );
+    if (isSelf) ref.read(sessionStoreProvider)?.setDisplayName(clean);
+    return null;
+  }
+
+  /// A name no one else in [taken] uses ("Maya", then "Maya 2", "Maya 3"...).
+  static String uniqueName(String base, Iterable<String> taken) {
+    final used = {for (final n in taken) n.toLowerCase()};
+    if (!used.contains(base.toLowerCase())) return base;
+    for (var i = 2; ; i++) {
+      final candidate = '$base $i';
+      if (!used.contains(candidate.toLowerCase())) return candidate;
+    }
   }
 
   void updateTripName(String newName) {
@@ -847,9 +945,25 @@ class TripController extends Notifier<TripState> {
   // ---------------------------------------------------------------------------
 
   /// Joins an existing 6-digit group code from another device.
-  Future<JoinSquadResult> joinSquad(String squadCode) async {
+  /// Joins a group by code (or a pasted invite link) under [displayName]
+  /// (defaults to the name saved on this device, then "Traveler N"). The
+  /// name can be changed at any time with [renameMember].
+  ///
+  /// The join is a **field-level write** of one new member entry: it never
+  /// replaces the group's document, so a friend adding expenses at the same
+  /// moment loses nothing.
+  Future<JoinSquadResult> joinSquad(
+    String squadCode, {
+    String? displayName,
+    bool createIfMissing = true,
+  }) async {
     final cleanCode = normalizeSquadCode(squadCode);
     if (cleanCode == null) return JoinSquadResult.invalid;
+    final store = ref.read(sessionStoreProvider);
+    final wanted = (displayName ?? store?.displayName ?? '').trim().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
 
     if (!_syncService.isAvailable) {
       state = state.copyWith(
@@ -864,16 +978,23 @@ class TripController extends Notifier<TripState> {
       // Join as a new traveler so two devices never share one identity.
       final myId = 'mem_${DateTime.now().microsecondsSinceEpoch}';
       _joinedMemberId = myId;
-      final me = TripMember(
-        id: myId,
-        name: 'Traveler ${remoteUpdate.trip.members.length + 1}',
+      final existing = remoteUpdate.trip.members.map((m) => m.name).toList();
+      final myName = uniqueName(
+        wanted.isEmpty
+            ? 'Traveler ${remoteUpdate.trip.members.length + 1}'
+            : wanted.length > maxNameLength
+            ? wanted.substring(0, maxNameLength)
+            : wanted,
+        existing,
       );
+      final me = TripMember(id: myId, name: myName);
       final members = [
         ...remoteUpdate.trip.members.map(
           (m) => m.copyWith(isCurrentUser: false),
         ),
         me.copyWith(isCurrentUser: true),
       ];
+      _saveTimer?.cancel();
       state = _withCalculatedBalances(
         state.copyWith(
           squadCode: cleanCode,
@@ -881,12 +1002,16 @@ class TripController extends Notifier<TripState> {
           trip: remoteUpdate.trip.copyWith(members: members),
           settlements: remoteUpdate.settlements,
           clearCategoryFilter: true,
+          hasTrip: true,
         ),
       );
+      if (wanted.isNotEmpty) store?.setDisplayName(myName);
       _listenToSync(cleanCode);
       _pushSync();
       return JoinSquadResult.joined;
     }
+
+    if (!createIfMissing) return JoinSquadResult.notFound;
 
     // Create a new synced trip under this code
     state = state.copyWith(squadCode: cleanCode);

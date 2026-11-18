@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
@@ -11,6 +12,7 @@ import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/pocko_main_shell.dart';
 import 'firebase_options.dart';
 import 'services/remote_config/remote_config_service.dart';
+import 'services/session/session_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,7 +76,22 @@ void main() async {
     );
   }
 
-  runApp(const ProviderScope(child: TravMateApp()));
+  // Local session: the landing is shown only on the first launch and the trip
+  // survives restarts. If storage is unavailable the app still runs (it just
+  // behaves like a first launch every time).
+  SessionStore? store;
+  try {
+    store = SessionStore(await SharedPreferences.getInstance());
+  } catch (e) {
+    debugPrint('[SessionStore] Local storage unavailable: $e');
+  }
+
+  runApp(
+    ProviderScope(
+      overrides: [sessionStoreProvider.overrideWithValue(store)],
+      child: const TravMateApp(),
+    ),
+  );
 }
 
 class TravMateApp extends StatelessWidget {

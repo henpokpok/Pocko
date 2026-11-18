@@ -16,7 +16,9 @@ import '../home/trip_home_screen.dart';
 import '../matcher/smart_slip_matcher_screen.dart';
 import '../sandbox/hybrid_sandbox_screen.dart';
 import '../settle/visual_settle_screen.dart';
+import '../settings/settings_sheet.dart';
 import '../squad/squad_setup_screen.dart';
+import '../trip/require_trip.dart';
 import '../trip/trip_controller.dart';
 import '../trip/trip_state.dart';
 
@@ -60,6 +62,8 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
 
   void _openCaptureModal() {
     if (_captureOpen) return;
+    // No trip yet: prompt to create / join one instead of opening capture.
+    if (!ensureTrip(context, ref)) return;
     setState(() => _captureOpen = true);
   }
 
@@ -204,9 +208,8 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
         (_currentTabIndex >= 0 && _currentTabIndex < _tabNames.length)
         ? _tabNames[_currentTabIndex]
         : '';
-    final label = currentTab.isNotEmpty
-        ? '${tripState.trip.name} • $currentTab'
-        : tripState.trip.name;
+    final tripName = tripState.hasTrip ? tripState.trip.name : 'No trip yet';
+    final label = currentTab.isNotEmpty ? '$tripName • $currentTab' : tripName;
 
     final narrow = MediaQuery.sizeOf(context).width < 360;
     return SafeArea(
@@ -313,6 +316,25 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
               ),
             ),
             const SizedBox(width: 6),
+            IconButton(
+              key: const ValueKey('settings_button'),
+              tooltip: 'Settings',
+              visualDensity: VisualDensity.compact,
+              icon: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.borderColor),
+                ),
+                child: const Icon(
+                  Icons.settings_rounded,
+                  size: 18,
+                  color: AppTheme.textSlate,
+                ),
+              ),
+              onPressed: () => showSettingsSheet(context),
+            ),
             IconButton(
               tooltip: 'AI Diagnostic Sandbox',
               icon: Container(

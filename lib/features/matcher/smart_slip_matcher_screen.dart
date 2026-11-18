@@ -25,6 +25,7 @@ import '../../services/hybrid_ai/hybrid_ai_service.dart';
 import '../../services/matcher/slip_analyzer.dart';
 import '../../services/matcher/slip_samples.dart';
 import '../expenses/expense_editor_sheet.dart';
+import '../trip/require_trip.dart';
 import '../trip/trip_controller.dart';
 import '../trip/trip_state.dart';
 
@@ -98,6 +99,8 @@ class _SmartSlipMatcherScreenState
   }
 
   Future<void> _pickImage({String? forExpenseId}) async {
+    // Receipt scan needs a trip (currency + members): prompt instead of crash.
+    if (!ensureTrip(context, ref)) return;
     final tripState = ref.read(tripControllerProvider);
     try {
       final image = await ImagePicker().pickImage(
@@ -147,6 +150,7 @@ class _SmartSlipMatcherScreenState
   }
 
   void _openSampleSheet() {
+    if (!ensureTrip(context, ref)) return;
     showPockoBottomSheet<void>(
       context: context,
       builder: (ctx) => Column(

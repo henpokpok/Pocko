@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'placeholder_home.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -57,6 +60,12 @@ class TripHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tripState = ref.watch(tripControllerProvider);
+    // No active trip (fresh install, or only a trip that has not started):
+    // the welcoming placeholder, unless the user opened the upcoming trip.
+    if (tripState.hasNoActiveTrip &&
+        ref.watch(openedUpcomingTripProvider) != tripState.trip.id) {
+      return const PlaceholderHome();
+    }
     final trip = tripState.trip;
     final totalSpend = tripState.totalSpend;
     final secondarySubtitle = CurrencyHelper.getSecondarySubtitle(

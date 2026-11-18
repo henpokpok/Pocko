@@ -2177,7 +2177,9 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: TelemetryPill(
+              key: const ValueKey('ai_source_badge'),
               onDark: true,
+              plain: true,
               source: result.inferenceSource,
               latencyMs: result.latencyMs,
               modelInfo: result.modelInfo,

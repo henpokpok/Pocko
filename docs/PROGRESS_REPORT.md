@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **545 / 545 pass** (38 suites) |
+| `flutter test` | **606 / 606 pass** (41 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606.
 
 ---
 
@@ -102,6 +102,17 @@ This took several steps:
 5. **App Check on a release build:** release builds normally use DeviceCheck, which needs an Apple key uploaded to Firebase. A new opt-in switch keeps the debug provider instead: `--dart-define=APP_CHECK_DEBUG=true`. Store builds without the flag are unchanged.
 6. **Launch crash `Duplicate plugin key: HybridAiPlugin`:** `AppDelegate.swift` registered the Gemini bridge twice. It now registers once (a regression test checks this).
 7. The iPad's App Check debug token was read from the console and registered in Firebase. The user then confirmed **voice capture and Gemini work on the iPad**.
+
+### Phase 11. Polish for the final demo recording
+A checkpoint commit and the tag `checkpoint-pre-polish` were made first. Then four workstreams:
+1. **Groups and renaming.** Join Group from every entry point (Landing, empty Home, Settings, Manage Group) with a name chosen first and a code or invite link; rename at any time. Referential integrity was verified: expenses, `customSplits` and repayments hold immutable member ids, so a rename changes only the display name and every bill, balance and view updates without changing any amount (tests compare the stored JSON before and after). The AI roster is read fresh on every capture. **Sync was made concurrency-safe:** the trip document moved to schema 2 (maps keyed by id) and each device writes only the entries it changed; the earlier whole-document overwrite could erase a join or rename from another device.
+2. **First-launch landing.** `has_seen_landing` (`shared_preferences`) plus a saved trip session, so later launches open straight on Home. **Settings → Replay Landing Page** resets only the flag, so demo takes never need a data wipe or a new App Check token.
+3. **Placeholder Home.** No trip, or only a future trip, shows "Create a New Trip" and "Join Existing Group" (plus an Upcoming card). The `+` button, Add Expense and Receipt Scan ask for a trip first, so they never run on a missing trip or currency. The app holds one trip at a time, so "upcoming trips" means that trip.
+4. **Final polish.** Info.plist permissions confirmed (camera, photo library, microphone, speech); iPad 11" portrait and landscape layouts tested for the placeholder, every tab, Manage Group, the sheets and the landing; a plain-language AI source badge on every capture (Cloud Gemini / On-Device / Offline fallback).
+
+Release builds for Android and iOS with `--dart-define=APP_CHECK_DEBUG=true` both build cleanly (commands in the README).
+
+**Not verified on devices yet:** the new schema-2 writes against the live Firestore project (the diff logic is unit-tested, the Firestore calls themselves are not), the first-launch / replay flow on the phone and iPad, and a real two-device concurrent edit. Existing cloud documents in the old array format are migrated by the first full write.
 
 ---
 

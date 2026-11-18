@@ -5,6 +5,7 @@ import '../../core/enums/expense_category.dart';
 import '../../core/enums/inference_source.dart';
 import '../../core/widgets/pocko_snack.dart';
 import '../../models/expense_item.dart';
+import '../trip/require_trip.dart';
 import '../trip/trip_controller.dart';
 import 'expense_editor_sheet.dart';
 
@@ -12,6 +13,7 @@ import 'expense_editor_sheet.dart';
 /// with a blank draft and logs the result. Used by the capture overlay's
 /// "Manual Expense" action.
 Future<void> addManualExpense(BuildContext context, WidgetRef ref) async {
+  if (!ensureTrip(context, ref)) return;
   final tripState = ref.read(tripControllerProvider);
   final draft = ExpenseItem(
     id: 'exp_${DateTime.now().microsecondsSinceEpoch}',
