@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1094191587584",
+    "project_id": "pocko-hybrid-ai",
+    "storage_bucket": "pocko-hybrid-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094191587584:android:a93be3183402cd3b7d53e5",
+        "android_client_info": {
+          "package_name": "com.hybridtrip.ai.travmate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGNb15rwJ2wKuvy_C4kGS42-YI29sTEFU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

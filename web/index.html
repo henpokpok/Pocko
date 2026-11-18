@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Pocko: offline-first travel expense tracker and smart bill splitter powered by Firebase AI Logic hybrid on-device inference.">
+  <meta name="theme-color" content="#10B981">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Pocko">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Pocko • Smart Bill Splitter (#BuildHybridAI)</title>
+  <link rel="manifest" href="manifest.json">
+  <!--
+    Optional: link your Firebase project so the web build can use the cloud fallback model.
+    Without it, Chrome's built-in Gemini Nano (Prompt API) still runs on-device.
+    <script>window.firebaseConfig = { apiKey: "...", projectId: "...", appId: "..." };</script>
+  -->
+  <!-- Firebase web app config for project pocko-hybrid-ai (public client identifiers, same as lib/firebase_options.dart). -->
+  <script>
+    window.firebaseConfig = {
+      apiKey: "AIzaSyDYV9PwIRUHLk2kC4VL2ISXc2YnJBL1NN8",
+      authDomain: "pocko-hybrid-ai.firebaseapp.com",
+      projectId: "pocko-hybrid-ai",
+      storageBucket: "pocko-hybrid-ai.firebasestorage.app",
+      messagingSenderId: "1094191587584",
+      appId: "1:1094191587584:web:5552c950f9a82f7b7d53e5",
+      measurementId: "G-3JBMKJ238F"
+    };
+  </script>
+  <!-- Firebase AI Logic Hybrid Inference Web Module -->
+  <script type="module" src="firebase_ai_web.js"></script>
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
