@@ -11,6 +11,7 @@ import 'core/theme/app_theme.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/pocko_main_shell.dart';
 import 'firebase_options.dart';
+import 'services/firebase/app_check_config.dart';
 import 'services/remote_config/remote_config_service.dart';
 import 'services/session/session_store.dart';
 
@@ -23,12 +24,10 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // 1. Enable Firebase App Check with Debug Provider for development builds
-    const recaptchaV3SiteKey = String.fromEnvironment(
-      'RECAPTCHA_V3_SITE_KEY',
-      defaultValue: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
-    );
-
+    // 1. Enable Firebase App Check. Native debug builds use the debug
+    // providers; on the web the debug provider is only ever used on
+    // localhost / 127.0.0.1, production hosts (*.web.app, *.firebaseapp.com)
+    // use reCAPTCHA Enterprise.
     // Profile / release builds installed straight from a Mac (so they open from
     // the home screen) can keep the debug provider with
     // `--dart-define=APP_CHECK_DEBUG=true`; its token is then registered once
@@ -43,9 +42,7 @@ void main() async {
       providerApple: debugAppCheck
           ? const AppleDebugProvider()
           : const AppleDeviceCheckProvider(),
-      providerWeb: debugAppCheck
-          ? ReCaptchaV3Provider('debug-token-local-development')
-          : ReCaptchaV3Provider(recaptchaV3SiteKey),
+      providerWeb: webAppCheckProvider(Uri.base.host),
     );
 
     // 2. Enable Cloud Firestore offline persistence

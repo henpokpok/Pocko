@@ -17,7 +17,7 @@
 import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import {
   initializeAppCheck,
-  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider,
 } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app-check.js";
 import {
   getAI,
@@ -34,11 +34,14 @@ if (typeof window !== "undefined") {
   }
 }
 
-// reCAPTCHA v3 site key used for App Check on production web builds. It must match the key passed to
-// Flutter as --dart-define=RECAPTCHA_V3_SITE_KEY. Override it before this module loads with
-//   <script>window.firebaseAppCheckSiteKey = "your-site-key";</script>
-// (On localhost the debug token above is used instead and the key is never exchanged.)
-const DEFAULT_RECAPTCHA_V3_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+// reCAPTCHA Enterprise key ID used for App Check on production hosts (*.web.app / *.firebaseapp.com).
+// Legacy reCAPTCHA v3 is closed to new Firebase apps. It must match `kRecaptchaEnterpriseKeyId` in
+// lib/services/firebase/app_check_config.dart (a unit test enforces this). Override it before this
+// module loads with <script>window.firebaseAppCheckSiteKey = "your-key-id";</script>.
+const RECAPTCHA_ENTERPRISE_KEY_ID = "6LeQFiguAAAAAHICeYz3HNnYpDmBOdzDzNkJ9k72";
+
+/** Debug token mode is only ever active on localhost; production hosts always use reCAPTCHA Enterprise. */
+const IS_LOCAL_HOST = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 
 // Chrome's built-in Prompt API requires explicit languages (English only for Pocko).
 const PROMPT_API_IO = {
@@ -163,8 +166,14 @@ function ensureAppCheck(app) {
   if (appCheckReady.has(app)) return;
   appCheckReady.add(app);
   try {
+    const key = window.firebaseAppCheckSiteKey || RECAPTCHA_ENTERPRISE_KEY_ID;
+    if (!IS_LOCAL_HOST && /^PASTE_/.test(key)) {
+      console.warn("[Firebase AI Web] reCAPTCHA Enterprise key ID is not configured; App Check skipped.");
+      return;
+    }
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(window.firebaseAppCheckSiteKey || DEFAULT_RECAPTCHA_V3_SITE_KEY),
+      // On localhost the SDK ignores the key and uses the debug token (see FIREBASE_APPCHECK_DEBUG_TOKEN).
+      provider: new ReCaptchaEnterpriseProvider(key),
       isTokenAutoRefreshEnabled: true,
     });
   } catch (e) {

@@ -1,1 +1,45 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"pocko-hybrid-ai","appId":"1:1094191587584:android:a93be3183402cd3b7d53e5","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"pocko-hybrid-ai","appId":"1:1094191587584:ios:64799f5c736e78eb7d53e5","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"pocko-hybrid-ai","configurations":{"android":"1:1094191587584:android:a93be3183402cd3b7d53e5","ios":"1:1094191587584:ios:64799f5c736e78eb7d53e5","web":"1:1094191587584:web:5552c950f9a82f7b7d53e5"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "pocko-hybrid-ai",
+          "appId": "1:1094191587584:android:a93be3183402cd3b7d53e5",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "pocko-hybrid-ai",
+          "appId": "1:1094191587584:ios:64799f5c736e78eb7d53e5",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "pocko-hybrid-ai",
+          "configurations": {
+            "android": "1:1094191587584:android:a93be3183402cd3b7d53e5",
+            "ios": "1:1094191587584:ios:64799f5c736e78eb7d53e5",
+            "web": "1:1094191587584:web:5552c950f9a82f7b7d53e5"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
