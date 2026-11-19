@@ -9,7 +9,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 /// Override at build time with `--dart-define=RECAPTCHA_ENTERPRISE_SITE_KEY=...`.
 const String kRecaptchaEnterpriseKeyId = String.fromEnvironment(
   'RECAPTCHA_ENTERPRISE_SITE_KEY',
-  defaultValue: '6LeQFiguAAAAAHICeYz3HNnYpDmBOdzDzNkJ9k72',
+  defaultValue: '6LdrKyguAAAAAFqJURuepMVj83XzOFVGfzAtO4_O',
 );
 
 /// Token string that makes the web SDK use its debug provider. The real debug

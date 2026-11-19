@@ -38,7 +38,7 @@ if (typeof window !== "undefined") {
 // Legacy reCAPTCHA v3 is closed to new Firebase apps. It must match `kRecaptchaEnterpriseKeyId` in
 // lib/services/firebase/app_check_config.dart (a unit test enforces this). Override it before this
 // module loads with <script>window.firebaseAppCheckSiteKey = "your-key-id";</script>.
-const RECAPTCHA_ENTERPRISE_KEY_ID = "6LeQFiguAAAAAHICeYz3HNnYpDmBOdzDzNkJ9k72";
+const RECAPTCHA_ENTERPRISE_KEY_ID = "6LdrKyguAAAAAFqJURuepMVj83XzOFVGfzAtO4_O";
 
 /** Debug token mode is only ever active on localhost; production hosts always use reCAPTCHA Enterprise. */
 const IS_LOCAL_HOST = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
