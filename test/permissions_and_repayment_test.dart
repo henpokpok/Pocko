@@ -15,6 +15,7 @@ import 'package:travmate/services/identity/device_identity.dart';
 import 'test_helpers.dart';
 
 const _denied = 'Only the Trip Host or creator can delete this entry';
+const _deniedEdit = 'Only the Trip Host or creator can edit this entry';
 
 /// A container whose "device" can switch person: the trip is built by the host,
 /// then [as] makes the same shared trip be used by somebody else.
@@ -351,7 +352,7 @@ void main() {
       );
       await tester.tap(find.text('Akihabara Gachapon & Snacks'));
       await settle(tester, 800);
-      expect(find.text(_denied), findsOneWidget);
+      expect(find.text(_deniedEdit), findsOneWidget);
       expect(find.text('Save Changes'), findsNothing);
     });
 

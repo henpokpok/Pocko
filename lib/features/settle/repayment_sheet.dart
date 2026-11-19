@@ -10,6 +10,7 @@ import '../../core/widgets/pocko_bottom_sheet.dart';
 import '../../core/widgets/pocko_pickers.dart';
 import '../../core/widgets/pocko_selector.dart';
 import '../../models/settlement_payment.dart';
+import '../settlement/pair_breakdown.dart';
 import '../trip/trip_controller.dart';
 
 /// Opens the "Record Repayment" sheet: who paid whom, how much, when, an
@@ -60,6 +61,9 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
   final TextEditingController _note = TextEditingController();
   String? _slip;
   String? _error;
+
+  /// A repayment bigger than what is owed needs a second tap (typo guard).
+  bool _overpayAcked = false;
 
   @override
   void initState() {
@@ -118,6 +122,16 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
       setState(() => _error = 'Enter an amount greater than zero.');
       return;
     }
+    if (!_overpayAcked) {
+      final warning = _overpayWarning(amount);
+      if (warning != null) {
+        setState(() {
+          _error = warning;
+          _overpayAcked = true;
+        });
+        return;
+      }
+    }
     final payment = ref
         .read(tripControllerProvider.notifier)
         .recordRepayment(
@@ -134,6 +148,29 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
       return;
     }
     Navigator.pop(context, payment);
+  }
+
+  /// `null` when [amount] is within what [_from] owes [_to] (directly, or as
+  /// the planned transfer); otherwise a message asking for a second tap.
+  String? _overpayWarning(double amount) {
+    final state = ref.read(tripControllerProvider);
+    final base = state.trip.baseCurrency;
+    final inBase = CurrencyHelper.convert(amount, _currency, base);
+    final net = computePairBreakdown(state, _from, _to).net;
+    var allowed = net < 0 ? -net : 0.0;
+    for (final t in state.simplifiedTransfers) {
+      if (t.fromMemberId == _from &&
+          t.toMemberId == _to &&
+          t.amount > allowed) {
+        allowed = t.amount;
+      }
+    }
+    if (inBase <= allowed + 0.5) return null;
+    final from = state.nameOf(_from);
+    final to = state.nameOf(_to);
+    return allowed <= 0.5
+        ? '$from does not owe $to anything right now. Tap Record Repayment again to record it anyway.'
+        : 'That is more than $from owes $to (${CurrencyHelper.formatAmount(allowed, base)}). Tap Record Repayment again to record it anyway.';
   }
 
   Widget _label(String text) => Padding(
@@ -172,6 +209,7 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
       ],
       onSelected: (v) => setState(() {
         _error = null;
+        _overpayAcked = false;
         onSelected(v);
       }),
     );
@@ -265,12 +303,18 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
                         icon: Icons.payments_rounded,
                       ),
                   ],
-                  onSelected: (v) => setState(() => _currency = v),
+                  onSelected: (v) => setState(() {
+                    _currency = v;
+                    _overpayAcked = false;
+                  }),
                 ),
               ),
               prefixIconConstraints: const BoxConstraints(minWidth: 0),
             ),
-            onChanged: (_) => setState(() => _error = null),
+            onChanged: (_) => setState(() {
+              _error = null;
+              _overpayAcked = false;
+            }),
           ),
           const SizedBox(height: 12),
           Align(

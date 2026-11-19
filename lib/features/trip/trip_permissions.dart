@@ -45,7 +45,12 @@ class TripPermissions {
   String? get hostMemberId =>
       isLegacy || trip.members.isEmpty ? null : trip.members.first.id;
 
-  /// Polite explanation shown when an action is not allowed.
+  /// Polite explanation shown when opening an entry for editing is not allowed.
+  String get deniedEditMessage => trip.lockGuestEdits && isGuest
+      ? 'The Trip Host has locked guest edits'
+      : 'Only the Trip Host or creator can edit this entry';
+
+  /// Polite explanation shown when deleting is not allowed.
   String get deniedMessage => trip.lockGuestEdits && isGuest
       ? 'The Trip Host has locked guest edits'
       : 'Only the Trip Host or creator can delete this entry';

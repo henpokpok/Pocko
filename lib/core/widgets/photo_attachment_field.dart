@@ -115,7 +115,10 @@ class _PhotoAttachmentFieldState extends State<PhotoAttachmentField> {
         key: key,
         onPressed: _busy ? null : onTap,
         icon: Icon(icon, size: 18),
-        label: Text(label, overflow: TextOverflow.ellipsis),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(label, maxLines: 1),
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.primaryEmeraldDark,
           side: const BorderSide(color: AppTheme.borderColor, width: 2),

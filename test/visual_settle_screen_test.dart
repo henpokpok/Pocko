@@ -256,6 +256,10 @@ void main() {
       final save = find.byKey(const ValueKey('repay_save'));
       await tester.ensureVisible(save);
       await tester.tap(save);
+      await settle(tester, 300);
+      // Alex owes less than ¥900: the typo guard asks for a second tap.
+      expect(find.textContaining('Tap Record Repayment again'), findsOneWidget);
+      await tester.tap(save);
       await settle(tester, 700);
 
       final p = container.read(tripControllerProvider).settlements.single;
@@ -312,7 +316,7 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text('¥-3,850'),
+          find.text('-¥3,850'),
           findsOneWidget,
           reason: 'your exact share of the TeamLab tickets',
         );

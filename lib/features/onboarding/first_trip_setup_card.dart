@@ -19,6 +19,7 @@ class FirstTripSetupCard extends StatefulWidget {
 class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _friend = TextEditingController();
+  final FocusNode _friendFocus = FocusNode();
   final List<String> _friends = [];
 
   TripDestination _destination = TripDestination.all.first;
@@ -31,6 +32,7 @@ class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
   void dispose() {
     _name.dispose();
     _friend.dispose();
+    _friendFocus.dispose();
     super.dispose();
   }
 
@@ -201,7 +203,14 @@ class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
                   controller: _friend,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _addFriend(),
+                  focusNode: _friendFocus,
+                  onSubmitted: (_) {
+                    _addFriend();
+                    // Keep typing: the next friend goes in right away.
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) _friendFocus.requestFocus();
+                    });
+                  },
                   onChanged: (_) {
                     if (_friendError != null) {
                       setState(() => _friendError = null);

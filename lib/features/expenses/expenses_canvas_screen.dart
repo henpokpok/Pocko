@@ -33,7 +33,7 @@ class ExpensesCanvasScreen extends ConsumerWidget {
     WidgetRef ref,
     ExpenseItem expense,
   ) async {
-    if (!_allowed(context, ref, expense)) return;
+    if (!_allowed(context, ref, expense, forDelete: false)) return;
     final tripState = ref.read(tripControllerProvider);
     final updated = await showExpenseEditor(
       context,
@@ -56,13 +56,19 @@ class ExpensesCanvasScreen extends ConsumerWidget {
 
   /// Host-or-creator rule: shows a polite toast and returns `false` when this
   /// device may not edit or delete [expense].
-  bool _allowed(BuildContext context, WidgetRef ref, ExpenseItem expense) {
+  bool _allowed(
+    BuildContext context,
+    WidgetRef ref,
+    ExpenseItem expense, {
+    bool forDelete = true,
+  }) {
     if (ref.read(tripControllerProvider.notifier).canModifyExpense(expense)) {
       return true;
     }
+    final perms = ref.read(tripPermissionsProvider);
     showPockoSnack(
       context,
-      ref.read(tripPermissionsProvider).deniedMessage,
+      forDelete ? perms.deniedMessage : perms.deniedEditMessage,
       icon: Icons.lock_rounded,
       success: false,
     );
@@ -714,10 +720,14 @@ class _DateFilterStrip extends ConsumerWidget {
       );
     }
 
-    final total = tripState.spendFor(selected);
-    final count = trip.expenses
-        .where((e) => selected.matches(e, trip.startDate))
-        .length;
+    // The strip total follows both filters (date and category), exactly the
+    // expenses listed below it.
+    final shown = tripState.filteredExpenses;
+    final total = shown.fold<double>(
+      0.0,
+      (sum, e) => sum + e.amountIn(trip.baseCurrency),
+    );
+    final count = shown.length;
     final title = switch (selected.kind) {
       DateFilterKind.all => 'All dates',
       DateFilterKind.preTrip => 'Pre-Trip',

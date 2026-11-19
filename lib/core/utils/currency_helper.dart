@@ -93,7 +93,10 @@ class CurrencyHelper {
   }) {
     final code = currency.toUpperCase();
     final sym = symbol(code);
-    final signStr = showSign && amount > 0 ? '+' : '';
+    // "-¥6,800" / "+¥6,800" (the sign leads, never "¥-6,800").
+    final signStr = amount < 0 && amount.roundToDouble() != 0
+        ? '-'
+        : (showSign && amount > 0 ? '+' : '');
     final isWhole = zeroDecimalCurrencies.contains(code) || (amount % 1 == 0);
     final formatter = isWhole
         ? NumberFormat('#,##0', 'en_US')
@@ -101,7 +104,7 @@ class CurrencyHelper {
     final value = zeroDecimalCurrencies.contains(code)
         ? amount.roundToDouble()
         : amount;
-    return '$signStr$sym${formatter.format(value)}';
+    return '$signStr$sym${formatter.format(value.abs())}';
   }
 
   static String? getSecondarySubtitle(

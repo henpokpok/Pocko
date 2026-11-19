@@ -5,7 +5,7 @@
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-606%2F606%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-616%2F616%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -236,17 +236,17 @@ flowchart TD
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
 | **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & ReCAPTCHA v3 protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 41 test suites (606 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 42 test suites (616 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 41 test suites (606 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 42 test suites (616 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +606: All tests passed!
+flutter test      # 00:08 +616: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
@@ -279,6 +279,7 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `sync_field_level_test` | **Concurrency-safe sync**: only changed entries are written (`expenseMap.<id>`, `memberMap.<id>.name`...), a join / rename / new expense from three devices all survive, a restarted device only adds (never deletes or overwrites), schema 2 round trip, key-order-proof comparison, legacy documents |
 | `members_and_session_test` | **Renaming keeps every bill intact** (ids never change, balances / splits / repayments identical, validation, host vs guest), the AI and offline parser see the new names on every capture, **Join Group** with a chosen name (unique names, invite links, not-found, from a placeholder), local session restore and `has_seen_landing` |
 | `placeholder_landing_test` | **First-launch-only landing** (Get Started / Join Group / Demo / Skip), replay from Settings without wiping storage, placeholder Home (fresh install and upcoming-only trip), **null-trip crash guards** (`+`, Add Expense, Receipt Scan), Settings and rename UI, the AI source badge, iPad 11" portrait and landscape |
+| `walkthrough_regressions_test` | Findings of the final real-user walkthrough: negative amounts print `-¥6,800`, the Expenses strip total follows the category filter, the setup card keeps focus after adding a friend, the **repayment typo guard** (a second tap for an amount above what is owed), separate *edit* / *delete* denial messages, the gallery button label scales instead of truncating |
 | `telemetry_and_mascot_test`, `pocko_mascot_test` | Telemetry pill variants, all six mascot moods animating, blink schedule |
 
 All widget tests run with the simulated engine and zero latency (`hybridAiServiceProvider` override), so they are deterministic offline.

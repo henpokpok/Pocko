@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **606 / 606 pass** (41 suites) |
+| `flutter test` | **616 / 616 pass** (42 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616.
 
 ---
 
@@ -113,6 +113,32 @@ A checkpoint commit and the tag `checkpoint-pre-polish` were made first. Then fo
 Release builds for Android and iOS with `--dart-define=APP_CHECK_DEBUG=true` both build cleanly (commands in the README).
 
 **Not verified on devices yet:** the new schema-2 writes against the live Firestore project (the diff logic is unit-tested, the Firestore calls themselves are not), the first-launch / replay flow on the phone and iPad, and a real two-device concurrent edit. Existing cloud documents in the old array format are migrated by the first full write.
+
+### Phase 12. Final real-user walkthrough (web, real Firebase, two browser origins)
+The built web app was run in the browser against the real Firebase project (App Check debug token registered for both `localhost:8790` and `127.0.0.1:8790`, as Device 1 and Device 2), stepping through all eight stages.
+
+| Stage | Result |
+|---|---|
+| 1. Landing and first trip | **Pass.** Three scenes, flag dropdown (🇯🇵 Japan ¥ JPY), "Tokyo Autumn Trip" with Maya, Liam, Alex lands on Home. |
+| 2. `+` AI capture | **Pass, real Gemini (no SIM).** Full-bleed backdrop (no black frame), typing never drops focus. Ramen each = ¥1,500 with a live pill toggle (¥2,000 with Alex); itemized sushi = ¥3,950 with `1200 / 1800 / 950`; Teamlab = Attractions ¥15,200; Disneyland headband = Souvenirs, Maya only. "Logged" animation and 5 s toast. |
+| 3. Manual expense and edit sheet | **Pass.** "Shinkansen to Kyoto" auto-selects Transport after the pause; the nine sections are in the required order; searchable dropdowns, pill members, a receipt image attached, previewed and opened full screen. |
+| 4. Home and Expenses | **Pass.** Totals, balances (checked by hand: You +¥27,850, Maya −¥11,800, Liam −¥8,750, Alex −¥7,300), top 3, category filter. There is no search box in the app, so search was not applicable. |
+| 5. Slip Matcher | **Pass.** Badge 0 → 1 (green) → 0 → 1 (coral) → 0, card number masked (`•••• 5521`), ✓ verified, Paid in Cash. |
+| 6. Settle | **Pass.** Lanes match the splits, no "How to pay", a partial ¥5,000 repayment drops Maya's debt to ¥6,800 and appears in Repayment History. |
+| 7. Two-device sync | **Pass.** Joining with a code shows the trip on Device 2 and "Bee" on Device 1 live; Device 2's expense appears on Device 1; Device 2 is told it cannot edit / delete the Host's entry, can edit and delete its own; the Host deleted a guest's entry and Device 2 updated live. |
+
+**Findings, all fixed with a regression test (`walkthrough_regressions_test`):**
+1. **A stale web build** was missing the web plugin registrant, so `shared_preferences` (and, in older builds, the recorder and image picker) were not registered: the session store failed on web and the landing showed every time. A clean build (`rm -rf .dart_tool/flutter_build`) regenerated it. The gates now build web from a clean state.
+2. A stray digit in the repayment amount recorded a ¥118,005,000 repayment (found by the walkthrough itself). Added a **typo guard**: a repayment above what is owed needs a second tap.
+3. The friend name field lost focus after pressing Enter on the setup card; it now stays focused.
+4. Negative amounts printed `¥-6,800`; they now print `-¥6,800`.
+5. The Expenses strip total ignored the category filter; it now matches the listed cards.
+6. Tapping a Host's entry as a guest said "can delete"; edit and delete now have separate messages.
+7. The "Choose from Gallery" button truncated on a 430 px screen; the label now scales.
+
+**Observations, not changed:** two of five cloud captures on the first run were slow (7 s, and one that exceeded the 20 s limit and fell back to the labelled offline parser, which produced the correct result); later calls took 1.3 to 4.3 s. The destination dropdown shows each flag twice (circle and label). Large absurd amounts can clip in the Net Balance row.
+
+**Cleanup:** the temporary trip document created for this run (`trips/977-269`) was deleted with the Firebase CLI and the test server stopped. Trip documents belonging to the phone and iPad installs were left alone.
 
 ---
 
