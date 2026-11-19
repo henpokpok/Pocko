@@ -503,6 +503,12 @@ void main() {
       }
       final byName = {for (final d in TripDestination.all) d.name: d};
       expect(byName['Japan']!.pickerLabel('¥'), '🇯🇵 Japan (¥ JPY)');
+      // The dropdown row shows the flag once (in its circle), not in the text.
+      expect(byName['Japan']!.rowLabel('¥'), 'Japan (¥ JPY)');
+      expect(byName['Switzerland']!.rowLabel('CHF'), 'Switzerland (CHF)');
+      for (final d in TripDestination.all) {
+        expect(d.rowLabel('x').contains(d.flag), isFalse, reason: d.name);
+      }
       expect(byName['Taiwan']!.currency, 'TWD');
       expect(byName['Hong Kong']!.currency, 'HKD');
     });

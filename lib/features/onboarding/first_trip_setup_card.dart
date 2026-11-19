@@ -154,7 +154,7 @@ class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
                 for (final d in TripDestination.all)
                   PockoMenuEntry<String>(
                     value: d.name,
-                    label: d.pickerLabel(CurrencyHelper.symbol(d.currency)),
+                    label: d.rowLabel(CurrencyHelper.symbol(d.currency)),
                     emoji: d.flag,
                     accent: AppTheme.primaryEmeraldDark,
                   ),

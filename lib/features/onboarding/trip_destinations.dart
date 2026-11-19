@@ -31,6 +31,13 @@ class TripDestination {
   /// `🇯🇵 Japan` (the picker's trigger).
   String get flagAndName => '$flag $name';
 
+  /// `Japan (¥ JPY)` / `Switzerland (CHF)`: the dropdown row text. The row shows
+  /// the flag once, in its own circle, so the label must not repeat it.
+  String rowLabel(String symbol) {
+    final s = symbol.trim();
+    return s == currency ? '$name ($currency)' : '$name ($s $currency)';
+  }
+
   /// `🇯🇵 Japan (¥ JPY)`, or `🇨🇭 Switzerland (CHF)` when the symbol is the code.
   String pickerLabel(String symbol) {
     final s = symbol.trim();

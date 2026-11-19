@@ -163,7 +163,7 @@ void main() {
         await _pick(
           tester,
           'destination_selector',
-          d.pickerLabel(entry.value.substring(6, 7)),
+          d.rowLabel(entry.value.substring(6, 7)),
         );
         expect(find.text(entry.value), findsOneWidget, reason: entry.key);
       }
@@ -233,7 +233,7 @@ void main() {
         startAtSetup: true,
       );
       await tester.enterText(_key('trip_name_field'), 'Seoul Autumn Trip');
-      await _pick(tester, 'destination_selector', '🇰🇷 South Korea (₩ KRW)');
+      await _pick(tester, 'destination_selector', 'South Korea (₩ KRW)');
       await _pick(tester, 'home_currency_selector', 'EUR € • Euro');
       await tester.ensureVisible(_key('member_name_field'));
       await tester.enterText(_key('member_name_field'), 'Jisoo');
@@ -298,7 +298,7 @@ void main() {
         await tester.tap(_key('skip_button'));
         await settle(tester, 800);
         await tester.enterText(_key('trip_name_field'), 'Seoul Autumn Trip');
-        await _pick(tester, 'destination_selector', '🇰🇷 South Korea (₩ KRW)');
+        await _pick(tester, 'destination_selector', 'South Korea (₩ KRW)');
         await tester.ensureVisible(_key('start_trip_button'));
         await tester.tap(_key('start_trip_button'));
         await tester.pump();
@@ -354,7 +354,7 @@ void main() {
           reason: 'opens on the setup card',
         );
         await tester.enterText(_key('trip_name_field'), 'Lisbon Long Weekend');
-        await _pick(tester, 'destination_selector', '🇪🇺 Europe (€ EUR)');
+        await _pick(tester, 'destination_selector', 'Europe (€ EUR)');
         await tester.ensureVisible(_key('start_trip_button'));
         await tester.tap(_key('start_trip_button'));
         await settle(tester, 1000);

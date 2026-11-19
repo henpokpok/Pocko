@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **616 / 616 pass** (42 suites) |
+| `flutter test` | **617 / 617 pass** (42 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617.
 
 ---
 
@@ -136,7 +136,7 @@ The built web app was run in the browser against the real Firebase project (App 
 6. Tapping a Host's entry as a guest said "can delete"; edit and delete now have separate messages.
 7. The "Choose from Gallery" button truncated on a 430 px screen; the label now scales.
 
-**Observations, not changed:** two of five cloud captures on the first run were slow (7 s, and one that exceeded the 20 s limit and fell back to the labelled offline parser, which produced the correct result); later calls took 1.3 to 4.3 s. The destination dropdown shows each flag twice (circle and label). Large absurd amounts can clip in the Net Balance row.
+**Observations:** two of five cloud captures on the first run were slow (7 s, and one that exceeded the 20 s limit and fell back to the labelled offline parser, which produced the correct result); later calls took 1.3 to 4.3 s. The two cosmetic items found (the destination dropdown showed each flag twice, and large amounts clipped in the Net Balance row) were fixed afterwards: the row text no longer repeats the flag, and balance amounts scale to fit.
 
 **Cleanup:** the temporary trip document created for this run (`trips/977-269`) was deleted with the Firebase CLI and the test server stopped. Trip documents belonging to the phone and iPad installs were left alone.
 

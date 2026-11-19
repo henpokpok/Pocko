@@ -876,20 +876,26 @@ class _BalanceBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: 84,
-            child: AnimatedAmount(
-              value: net,
-              currency: currency,
-              showSign: true,
-              textAlign: TextAlign.right,
-              style: AppTheme.tabularNumberStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: net.abs() < 0.5
-                    ? AppTheme.textMuted
-                    : (isPositive
-                          ? AppTheme.primaryEmeraldDark
-                          : AppTheme.coralOwesText),
+            width: 96,
+            // Large numbers shrink to fit instead of clipping.
+            child: FittedBox(
+              key: const ValueKey('balance_amount_fit'),
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: AnimatedAmount(
+                value: net,
+                currency: currency,
+                showSign: true,
+                textAlign: TextAlign.right,
+                style: AppTheme.tabularNumberStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: net.abs() < 0.5
+                      ? AppTheme.textMuted
+                      : (isPositive
+                            ? AppTheme.primaryEmeraldDark
+                            : AppTheme.coralOwesText),
+                ),
               ),
             ),
           ),

@@ -8,6 +8,7 @@ import 'package:travmate/core/widgets/photo_attachment_field.dart';
 import 'package:travmate/features/expenses/expenses_canvas_screen.dart';
 import 'package:travmate/features/onboarding/first_trip_setup_card.dart';
 import 'package:travmate/features/settle/repayment_sheet.dart';
+import 'package:travmate/features/settle/visual_settle_screen.dart';
 import 'package:travmate/features/trip/trip_controller.dart';
 import 'package:travmate/features/trip/trip_permissions.dart';
 import 'package:travmate/models/expense_item.dart';
@@ -280,6 +281,44 @@ void main() {
       );
       expect(find.text('Choose from Gallery'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('Net Balance amounts never clip', () {
+    testWidgets('absurdly large balances shrink to fit their column', (
+      tester,
+    ) async {
+      final container = await pumpPocko(
+        tester,
+        const VisualSettleScreen(),
+        size: const Size(360, 3400),
+      );
+      container
+          .read(tripControllerProvider.notifier)
+          .recordRepayment(
+            fromMemberId: 'maya',
+            toMemberId: 'you',
+            amount: 118005000,
+          );
+      await settle(tester, 900);
+      final fits = find.byKey(const ValueKey('balance_amount_fit'));
+      expect(fits, findsNWidgets(4), reason: 'one per traveler');
+      for (final f in fits.evaluate()) {
+        final box = f.renderObject! as RenderBox;
+        expect(box.size.width, lessThanOrEqualTo(96.01));
+        // The text inside is scaled down, never wider than its slot.
+        final text = find.descendant(
+          of: find.byWidget(f.widget),
+          matching: find.byType(Text),
+        );
+        // getRect applies the FittedBox's scale transform.
+        expect(
+          tester.getRect(text).width,
+          lessThanOrEqualTo(box.size.width + 0.5),
+        );
+      }
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('118,'), findsWidgets);
     });
   });
 }
