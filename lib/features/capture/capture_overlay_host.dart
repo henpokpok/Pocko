@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 ///
 /// * the page underneath stays **full-bleed at scale 1.0** (no shrink, no
 ///   rounded inset, so no black frame appears around the screen edges),
-/// * a lightweight dim scrim ([scrimColor], ~90%) fades in over [duration] with
+/// * a lightweight dim scrim ([scrimColor], ~92%) fades in over [duration] with
 ///   `Curves.easeOutCubic` across the whole viewport, status and navigation
 ///   areas included,
 /// * the capture UI fades in on top.
@@ -22,10 +22,10 @@ class CaptureOverlayHost extends StatefulWidget {
   /// Builds the capture UI. Only called while the overlay is mounted.
   final WidgetBuilder overlayBuilder;
 
-  /// Dark scrim (~90% opaque) so the page stays recognizable but never
+  /// Dark scrim (~92% opaque) so the page stays recognizable but never
   /// competes with the foreground text and pills.
-  static const Color scrimColor = Color(0xE6070F18);
-  static const double scrimAlpha = 0.90;
+  static const Color scrimColor = Color(0xEB070F18);
+  static const double scrimAlpha = 0.92;
   static const Duration duration = Duration(milliseconds: 240);
 
   const CaptureOverlayHost({

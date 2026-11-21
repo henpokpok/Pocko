@@ -62,30 +62,31 @@ void main() {
       expect(find.text('840 ms'), findsOneWidget);
     });
 
-    testWidgets('Offline results say Offline • Local Rules, never SIM; compact variant is short', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        const TelemetryPill(
-          source: InferenceSource.onDevice,
-          latencyMs: 90,
-          simulated: true,
-        ),
-      );
-      expect(find.text('SIM'), findsNothing);
-      expect(find.textContaining('Offline • Local Rules'), findsOneWidget);
+    testWidgets(
+      'Offline results say Offline • Local Rules, never SIM; compact variant is short',
+      (tester) async {
+        await pump(
+          tester,
+          const TelemetryPill(
+            source: InferenceSource.onDevice,
+            latencyMs: 90,
+            simulated: true,
+          ),
+        );
+        expect(find.text('SIM'), findsNothing);
+        expect(find.textContaining('Offline • Local Rules'), findsOneWidget);
 
-      await pump(
-        tester,
-        const TelemetryPill(
-          source: InferenceSource.inCloud,
-          latencyMs: 700,
-          compact: true,
-        ),
-      );
-      expect(find.text('☁️ 700 ms'), findsOneWidget);
-    });
+        await pump(
+          tester,
+          const TelemetryPill(
+            source: InferenceSource.inCloud,
+            latencyMs: 700,
+            compact: true,
+          ),
+        );
+        expect(find.text('☁️ 700 ms'), findsOneWidget);
+      },
+    );
 
     testWidgets('Dark variant renders without errors', (tester) async {
       await pump(

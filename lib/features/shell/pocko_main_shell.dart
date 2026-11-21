@@ -435,7 +435,7 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
             borderRadius: BorderRadius.circular(32),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.85),
+                color: Colors.white.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.8),
@@ -525,7 +525,7 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
         borderRadius: BorderRadius.circular(34),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.88),
+            color: Colors.white.withValues(alpha: 0.94),
             borderRadius: BorderRadius.circular(34),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.8),

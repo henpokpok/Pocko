@@ -59,10 +59,10 @@ void main() {
     });
   });
 
-  test('capture scrim is 90% opaque', () {
-    expect(CaptureOverlayHost.scrimColor, const Color(0xE6070F18));
-    expect(CaptureOverlayHost.scrimColor.a, closeTo(0.90, 0.005));
-    expect(CaptureOverlayHost.scrimAlpha, 0.90);
+  test('capture scrim is 92% opaque', () {
+    expect(CaptureOverlayHost.scrimColor, const Color(0xEB070F18));
+    expect(CaptureOverlayHost.scrimColor.a, closeTo(0.92, 0.005));
+    expect(CaptureOverlayHost.scrimAlpha, 0.92);
   });
 
   test('the word SIM never reaches the UI', () {
@@ -92,5 +92,26 @@ void main() {
     expect(js, contains('FAST_CLOUD_MODEL = "gemini-3.1-flash-lite"'));
     expect(js, contains('SLOW_CLOUD_MODEL = "gemini-3.8-flash"'));
     expect(js, isNot(contains('gemini-2.5-flash')));
+  });
+
+  test('hosting serves the app shell with no-cache', () {
+    final text = File('firebase.json').readAsStringSync();
+    for (final source in [
+      '/index.html',
+      '/flutter_bootstrap.js',
+      '/flutter_service_worker.js',
+      '**/*.js',
+    ]) {
+      expect(text, contains('"source": "$source"'), reason: source);
+    }
+    expect(text, contains('"no-cache'));
+  });
+
+  test('nav bar and rail are crisp 94% surfaces, not frosted glass', () {
+    final src = File('lib/features/shell/pocko_main_shell.dart')
+        .readAsStringSync();
+    expect(src, isNot(contains('alpha: 0.85')));
+    expect(src, isNot(contains('alpha: 0.88')));
+    expect('alpha: 0.94'.allMatches(src).length, greaterThanOrEqualTo(2));
   });
 }

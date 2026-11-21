@@ -1393,14 +1393,16 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
       // Idle: a static animation, so no per-frame rebuild until text appears.
       animation: glowing ? _sweep : kAlwaysDismissedAnimation,
       child: field,
-      builder: (context, child) => ShaderMask(
-        key: const ValueKey('live_gradient'),
-        // Idle: BlendMode.dst paints the text untouched. Glowing: the moving
-        // green gradient replaces the glyph colour (srcIn).
-        blendMode: glowing ? BlendMode.srcIn : BlendMode.dst,
-        shaderCallback: (bounds) =>
-            _liveGradient(_sweep.value).createShader(bounds),
-        child: child,
+      builder: (context, child) => RepaintBoundary(
+        child: ShaderMask(
+          key: const ValueKey('live_gradient'),
+          // Idle: BlendMode.dst paints the text untouched. Glowing: the moving
+          // green gradient replaces the glyph colour (srcIn).
+          blendMode: glowing ? BlendMode.srcIn : BlendMode.dst,
+          shaderCallback: (bounds) =>
+              _liveGradient(_sweep.value).createShader(bounds),
+          child: child,
+        ),
       ),
     );
 
@@ -2509,38 +2511,40 @@ class _AnalyzingText extends StatelessWidget {
       animation: sweep,
       builder: (context, _) {
         final t = sweep.value;
-        return ShaderMask(
-          key: const ValueKey('analyzing_shimmer'),
-          blendMode: BlendMode.srcIn,
-          shaderCallback: (bounds) => LinearGradient(
-            colors: const [
-              Color(0x8CFFFFFF),
-              Color(0x8CFFFFFF),
-              Color(0xFF10B981),
-              Color(0xFF6EE7B7),
-              Color(0xFFFFFFFF),
-              Color(0xFF6EE7B7),
-              Color(0xFF10B981),
-              Color(0x8CFFFFFF),
-              Color(0x8CFFFFFF),
-            ],
-            stops: const [0, 0.18, 0.34, 0.44, 0.5, 0.56, 0.66, 0.82, 1],
-            transform: _SlideGradient(t * 2 - 1),
-          ).createShader(bounds),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 10,
-            runSpacing: 2,
-            children: [
-              for (var i = 0; i < words.length; i++)
-                Transform.translate(
-                  offset: Offset(0, math.sin(t * 2 * math.pi - i * 0.7) * 4),
-                  child: Transform.scale(
-                    scale: 1 + 0.025 * math.sin(t * 2 * math.pi - i * 0.7),
-                    child: Text(words[i], style: style),
+        return RepaintBoundary(
+          child: ShaderMask(
+            key: const ValueKey('analyzing_shimmer'),
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => LinearGradient(
+              colors: const [
+                Color(0x8CFFFFFF),
+                Color(0x8CFFFFFF),
+                Color(0xFF10B981),
+                Color(0xFF6EE7B7),
+                Color(0xFFFFFFFF),
+                Color(0xFF6EE7B7),
+                Color(0xFF10B981),
+                Color(0x8CFFFFFF),
+                Color(0x8CFFFFFF),
+              ],
+              stops: const [0, 0.18, 0.34, 0.44, 0.5, 0.56, 0.66, 0.82, 1],
+              transform: _SlideGradient(t * 2 - 1),
+            ).createShader(bounds),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 2,
+              children: [
+                for (var i = 0; i < words.length; i++)
+                  Transform.translate(
+                    offset: Offset(0, math.sin(t * 2 * math.pi - i * 0.7) * 4),
+                    child: Transform.scale(
+                      scale: 1 + 0.025 * math.sin(t * 2 * math.pi - i * 0.7),
+                      child: Text(words[i], style: style),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },

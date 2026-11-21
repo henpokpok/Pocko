@@ -2,10 +2,15 @@
 > **Log in 3 seconds offline. Match slips privately. Settle trips with zero awkward math.**  
 > *The Flagship Cross-Platform Travel Expense & Smart Bill Splitter powered by Genuine Firebase AI Logic Hybrid Inference.*
 
+> ## 🚀 Try it live: **[pocko-hybrid-ai.web.app](https://pocko-hybrid-ai.web.app)**
+> Open it in Chrome on a phone, tablet or desktop. No sign-up: tap **Try Tokyo Demo Trip** on the landing page and you are inside a synced group trip in seconds.
+
+[![Live Web App](https://img.shields.io/badge/Live%20Web%20App-pocko--hybrid--ai.web.app-10B981?logo=googlechrome&logoColor=white&style=for-the-badge)](https://pocko-hybrid-ai.web.app)
+
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-640%2F640%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-642%2F642%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -48,7 +53,7 @@ Whether you are deep inside the Tokyo subway with zero cell service, hiking in t
 * **Awkward Web of Debts:** In a 4-person trip, settling debts often results in a convoluted web of 6–10 repetitive peer-to-peer transfers with foreign exchange conversion confusion.
 
 ### The Pocko Solution
-1. **3-Second "Light Intelligence" Capture:** Tap the glowing center `+`: the live page stays full-bleed at 1.0x under a clean ~90% dark scrim that fades in across the whole screen (**no blur**, no shrink, no black border, so it stays buttery) while a giant 240 px Pocko zooms in. Speak (it waits **3.5 s of dead air** before auto-confirming) or type naturally (*"Ramen 1 thousand with Alex, Maya and Liam, taxi 2.5k for me"*): spoken multipliers (`thousand`, `thousan`, `k`, `million`, `m`...) become numbers, every mentioned member is picked up, and one **Confirm** starts the analysis while your words shimmer. The sentence returns with tappable item, price **and member-name** highlights; the category pill sits on its own row under it, a live mini expense card previews exactly how the entry will look, and the name-only member pills stay in two-way sync with the highlighted names. A second **Confirm** saves. A subtle **Manual Expense** action opens the standard Add Expense sheet, where Pocko suggests a category after 2.5 s of idle typing.
+1. **3-Second "Light Intelligence" Capture:** Tap the glowing center `+`: the live page stays full-bleed at 1.0x under a clean ~92% dark scrim that fades in across the whole screen (**no blur**, no shrink, no black border, so it stays buttery) while a giant 240 px Pocko zooms in. Speak (it waits **3.5 s of dead air** before auto-confirming) or type naturally (*"Ramen 1 thousand with Alex, Maya and Liam, taxi 2.5k for me"*): spoken multipliers (`thousand`, `thousan`, `k`, `million`, `m`...) become numbers, every mentioned member is picked up, and one **Confirm** starts the analysis while your words shimmer. The sentence returns with tappable item, price **and member-name** highlights; the category pill sits on its own row under it, a live mini expense card previews exactly how the entry will look, and the name-only member pills stay in two-way sync with the highlighted names. A second **Confirm** saves. A subtle **Manual Expense** action opens the standard Add Expense sheet, where Pocko suggests a category after 2.5 s of idle typing.
 2. **100% Offline-First Architecture:** On-device local LLM execution paired with Cloud Firestore offline persistence ensures zero downtime anywhere in the world.
 3. **Smart Slip Matcher (Privacy Shield, "Grade Pocko's work"):** Upload a slip photo or run a curated sample. Card numbers, IBANs, e-mails and holder names are masked on-device *before* any model sees them; plain bank notifications stay on 🟢 local AI while itemized foreign receipts use the ☁️ cloud fallback. Slips never sync to your group. Every logged expense sits side by side with its candidate slip: tap **✓ Correct** or **✕ Wrong** (pick a different slip, add one, or choose *Paid in Cash (No Slip Needed)*). Each card carries a compact telemetry footer such as `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `(Sim) • 48ms`.
 4. **Greedy Debt Simplification ($O(N \log N)$):** Automatically reduces multi-party webs of debt to a maximum of $N - 1$ optimal transfers with 1-click settlement.
@@ -128,7 +133,7 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
 * **Firebase Anonymous Authentication ([`lib/main.dart`](lib/main.dart))**:
   - Frictionless anonymous device authentication (`signInAnonymously()`) on app launch.
 * **Firebase App Check ([`lib/main.dart`](lib/main.dart))**:
-  - Initialized with `AndroidDebugProvider`, `AppleDebugProvider`, and build-time Web ReCAPTCHA v3 key via `String.fromEnvironment('RECAPTCHA_V3_SITE_KEY', defaultValue: ...)`.
+  - Initialized with `AndroidDebugProvider` / `AppleDebugProvider` for developer builds (Play Integrity / DeviceCheck otherwise) and, on the web, **reCAPTCHA Enterprise (Fraud Defense)** on production hosts (`*.web.app`, `*.firebaseapp.com`); the debug token is only ever used on `localhost` / `127.0.0.1` ([`lib/services/firebase/app_check_config.dart`](lib/services/firebase/app_check_config.dart), mirrored in [`web/firebase_ai_web.js`](web/firebase_ai_web.js)).
 * **Firebase Remote Config ([`lib/services/remote_config/remote_config_service.dart`](lib/services/remote_config/remote_config_service.dart))**:
   - Dynamically fetches runtime AI policy parameters: `ai_inference_mode`, `cloud_fallback_model`, `max_output_tokens`, and `prompt_template_override`. **They are applied to every request** (mode in any casing, model name, clamped token budget, `{{userInput}}`-style prompt templates) with safe fallbacks for blank values.
   - Live diagnostics card with manual "Fetch & Activate" exposed in [`HybridSandboxScreen`](lib/features/sandbox/hybrid_sandbox_screen.dart).
@@ -137,7 +142,7 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
 
 ## 🧑‍⚖️ Judge Quick Tour (2 minutes, no microphone needed)
 
-0. `flutter run -d chrome`: the app opens on an animated **landing story** of three illustrated scenes (log live at a café offline in 3 s, a bank slip snapping onto its waiting expense, and the on-device privacy shield masking `•••• 4829`). Tap **Try Tokyo Demo Trip** for pre-loaded data in one click, or **Skip / Next ➔ Set up my trip** to create your own trip (name, destination that auto-pairs the currency, home currency, friends as name tags: *no app install needed for friends*). **Manage Group ➔ New Trip / Setup Wizard** reopens it any time.
+0. **Open the live app: [https://pocko-hybrid-ai.web.app](https://pocko-hybrid-ai.web.app)** (or run it yourself with `flutter run -d chrome`). The app opens on an animated **landing story** of three illustrated scenes (log live at a café offline in 3 s, a bank slip snapping onto its waiting expense, and the on-device privacy shield masking `•••• 4829`). Tap **Try Tokyo Demo Trip** for pre-loaded data in one click, or **Skip / Next ➔ Set up my trip** to create your own trip (name, destination that auto-pairs the currency, home currency, friends as name tags: *no app install needed for friends*). **Manage Group ➔ New Trip / Setup Wizard** reopens it any time.
 1. Tap the glowing **+**. Type something like *Dinner 1 thousand yen, Alex paid, split with Maya and Liam* (or tap the mic: the demo dictation analyzes itself after a natural pause) and press **Confirm**. Pocko juggles while your words shimmer (about half a second when no cloud/on-device model is provisioned, instantly direct when Firebase AI Logic is configured), then returns your sentence with glowing item, price and category pills and a telemetry pill: `🟢 On-Device • Gemini Nano • 92 ms` or `☁️ Cloud Fallback • Gemini Flash • 840 ms`. A tiny `SIM` tag appears only when the offline safety-net engine answered instead of a real model.
 2. Tap any pill to edit it instantly (item name or price). Tapping an item also focuses it: the friend avatars and the **paid by** chip below follow the focused item. Press **Confirm** again: a short **Logged** beat, then the overlay fades back to the live page. Home, Expenses and Settle all update at once (and **Undo** is one tap away).
 3. Open **Matcher**. Grade Pocko's pairs with **✓ Correct** / **✕ Wrong** (the Wrong sheet offers other slips, a gallery pick, sample slips or *Paid in Cash*), or run **Sample Slips**: *Card alert • TeamLab* (local AI, PII masked, exact match) and *Paris bistro receipt (EUR)* (itemized cloud fallback, converted to ¥). Cards end with `🟢 (Local) • 71ms` / `☁️ (Cloud) • 640ms` style footers; the pending-slip count lives on the Matcher icon in the navigation bar.
@@ -151,7 +156,7 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
 ```mermaid
 flowchart TD
     subgraph UI[Pocko Presentation Layer • Material 3 Expressive]
-        Shell[PockoMainShell<br/>5-Item Frosted Glass Navigation Bar]
+        Shell[PockoMainShell<br/>5-Item Translucent Navigation Bar (no blur)]
         Home[Tab 0: TripHomeScreen<br/>Trip Summary, Group Net Balance, Top 3 Expenses, Recent]
         Expenses[Tab 1: ExpensesCanvasScreen<br/>Date Filter Strip (All / Pre-Trip / each day), Category Chips, Timeline Feed]
         Capture[Center '+': AiExpenseCaptureSheet<br/>Light Intelligence Overlay • Inline Highlighted Transcript]
@@ -186,7 +191,7 @@ flowchart TD
         Firestore[(Cloud Firestore<br/>Offline Cache + Real-Time Snapshot Listener)]
         RemoteConfig[(Firebase Remote Config<br/>Dynamic Runtime AI Policies)]
         Auth[Firebase Anonymous Auth<br/>Frictionless Secure Device UID]
-        AppCheck[Firebase App Check<br/>ReCAPTCHA v3 & Debug Providers]
+        AppCheck[Firebase App Check<br/>reCAPTCHA Enterprise & Debug Providers]
     end
 
     Home --> TripCtrl
@@ -234,19 +239,19 @@ flowchart TD
 | **Web AI Logic** | Firebase JS SDK | `firebase/ai (v12.5+)` | Hybrid mode + W3C Prompt API / Gemini Nano on Chrome Desktop (139+) |
 | **Cloud Database** | Cloud Firestore | `cloud_firestore: ^7.1.0` | Real-time multi-device sync with offline persistence |
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
-| **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & ReCAPTCHA v3 protection |
+| **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & reCAPTCHA Enterprise (Fraud Defense) protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 45 test suites (640 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 45 test suites (642 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 45 test suites (640 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 45 test suites (642 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +640: All tests passed!
+flutter test      # 00:08 +642: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
@@ -256,7 +261,7 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `hybrid_ai_service_test`, `expense_prompt_builder_test` | English parsing (multi-expense, payers, splits, currencies), Remote Config policy, prompt templates, receipts |
 | `slip_pipeline_test` | PII masking, match tiers, local-vs-cloud routing for the four sample slips |
 | `squad_sync_service_test` | Firestore (de)serialization, malformed documents, offline behaviour |
-| `*_screen_test`, `pocko_main_shell_test` | Reactive UI across Home (Top Expenses, nav badge, no banners) / Expenses (date strip, `showCheckmark: false`, time metadata) / Matcher (✓ Correct, ✕ Wrong, Paid in Cash, telemetry footer) / Settle (transfer lanes, itemized breakdown, Record Repayment, Repayment History) / Group / Sandbox, sliding nav indicator, **capture overlay dim & drop (no `BackdropFilter`, ~90% scrim, 0.965 page scale)**, Manual Expense to Add Expense sheet, swipe-to-delete + Undo, empty states |
+| `*_screen_test`, `pocko_main_shell_test` | Reactive UI across Home (Top Expenses, nav badge, no banners) / Expenses (date strip, `showCheckmark: false`, time metadata) / Matcher (✓ Correct, ✕ Wrong, Paid in Cash, telemetry footer) / Settle (transfer lanes, itemized breakdown, Record Repayment, Repayment History) / Group / Sandbox, sliding nav indicator, **capture overlay dim & drop (no `BackdropFilter`, ~92% scrim, 0.965 page scale)**, Manual Expense to Add Expense sheet, swipe-to-delete + Undo, empty states |
 | `pocko_bottom_sheet_and_footer_test`, `settle_graph_and_breakdown_test`, `transcript_tokens_test` | Global `showPockoBottomSheet` (80 % max height, drag handle, keyboard inset, no stray `showModalBottomSheet`), pair breakdown math, transcript tokenizer behind the inline pills |
 | `ai_expense_capture_sheet_test` | No preset chips, **Confirm** with `Icons.check_rounded` (no emoji), **Manual Expense**, 240 px hero + zoom, moving-gradient `ShaderMask`, analyzing shimmer/wave, always-visible member bar with **auto-selection** rules, inline pill editing + validation, focus switching, Logged + Undo, **320×568 phones, keyboard insets, iPad/desktop widths** |
 | `live_inference_gate_test` | Fast path: negative/timed-out probe returns at once, cached probes, call ceiling, no surfaced errors |
@@ -309,7 +314,7 @@ Store builds omit the flag and use the production providers.
 
 ### 2. Clone & Install Dependencies
 ```bash
-cd travmate
+git clone https://github.com/henpokpok/Pocko.git && cd Pocko
 flutter pub get
 ```
 
@@ -353,7 +358,8 @@ flutter run -d ios
 ### 6. Building for Production / Firebase Hosting
 ```bash
 # Build Web release bundle (Wasm & JS interop ready)
-flutter build web --no-tree-shake-icons --dart-define=RECAPTCHA_V3_SITE_KEY=your_production_key
+flutter build web --no-tree-shake-icons
+# (optional) override the reCAPTCHA Enterprise key ID: --dart-define=RECAPTCHA_ENTERPRISE_SITE_KEY=your_key_id
 
 # Deploy to Firebase Hosting
 firebase deploy --only hosting

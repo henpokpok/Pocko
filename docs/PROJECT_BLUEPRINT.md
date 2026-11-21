@@ -17,7 +17,7 @@
 
 ## 1. Product Concept & Complete User Journey
 
-Pocko is structured around **4 core navigation tabs**, a persistent **Frosted Glass Navigation Shell** (a floating bottom bar on phones, a vertical frosted rail with the center `+` on tablets and desktop, `width >= 768`), a **Trip Setup Modal**, and a centralized **"Light Intelligence" Capture Overlay**. Every number on every screen is derived from one Riverpod `TripState`, so adding/editing/deleting an expense, changing members, switching currency, confirming slips or marking a transfer settled recalculates totals, rings, balances and badges everywhere at once.
+Pocko is structured around **4 core navigation tabs**, a persistent **Translucent Navigation Shell** (a floating bottom bar on phones, a vertical rail with the center `+` on tablets and desktop, `width >= 768`), a **Trip Setup Modal**, and a centralized **"Light Intelligence" Capture Overlay**. Every number on every screen is derived from one Riverpod `TripState`, so adding/editing/deleting an expense, changing members, switching currency, confirming slips or marking a transfer settled recalculates totals, rings, balances and badges everywhere at once.
 
 ```mermaid
 flowchart LR
@@ -131,7 +131,7 @@ The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini •
 The center `+` raises the **Light Intelligence overlay** ([`ai_expense_capture_sheet.dart`](../lib/features/capture/ai_expense_capture_sheet.dart)), hosted *inline* by `PockoMainShell` through [`CaptureOverlayHost`](../lib/features/capture/capture_overlay_host.dart). There is **no blur filter anywhere in the capture flow** (animating a full-screen Gaussian blur drops frames). The "dim & drop" transition only animates opacity and a transform, both composited on the GPU:
 
 * the live page stays **full-bleed at 1.0×** (no scale transform, no rounded clip inset, so no black frame appears at the screen edges),
-* a clean dark scrim (`Color(0xE6070F18)`, **~90%**, 240 ms, `Curves.easeOutCubic`) fades in over it, so the page stays recognizable but foreground text and pills have crisp contrast,
+* a clean dark scrim (`Color(0xEB070F18)`, **~92%**, 240 ms, `Curves.easeOutCubic`) fades in over it, so the page stays recognizable but foreground text and pills have crisp contrast,
 * the capture UI fades in on top; closing reverses everything and unmounts the overlay.
 
 ```mermaid
@@ -147,7 +147,7 @@ sequenceDiagram
     participant Store as TripController & Firestore
 
     User->>Host: Taps Center '+'
-    Host->>Host: ~90% dark scrim fades in over the full-bleed page (no blur, no scale)
+    Host->>Host: ~92% dark scrim fades in over the full-bleed page (no blur, no scale)
     Host->>Overlay: Pocko zooms 0.55 -> 1.0 (240px hero)
     User->>Speech: Speaks (green gradient sweeps over the live text) or types
     User->>Overlay: Tags group members on the always-visible strip
@@ -259,7 +259,7 @@ Pocko implements Google's **Material 3 Expressive** design language, emphasizing
 
 ### Depth, Glass & Motion
 * **Layered elevation:** `AppTheme.elevatedCardShadow` (ambient + key + contact shadow) for hero cards and the nav; `AppTheme.surfaceDecoration()` for hairline white cards.
-* **Frosted glass:** the nav shell and `GlassCard` use `BackdropFilter` blurs with translucent white fills. The capture overlay deliberately uses **no blur** (scrim only) to stay at full frame rate.
+* **No blur anywhere:** the nav shell and `GlassCard` use crisp 94% white surfaces with a hairline border (no `BackdropFilter`, `MaskFilter` or `ImageFilter` in `lib/`, enforced by a test); glows are pre-computed `RadialGradient`s and shadow blurs stay at 24 or below. This keeps iPad Retina WebGL frame times low.
 * **Shared components** (`lib/core/widgets/`): `TelemetryPill`, `Tactile` (spring press + haptic), `AnimatedAmount` (count-up with tabular figures), `PockoEmptyState`, `GlassCard`, `AdaptiveColumns` / `TabScrollBody` (single column on phones, balanced two columns at `>= 768`), `pocko_snack` helpers.
 * **Motion:** staggered `flutter_animate` entrances (timeline delays, so no pending timers), a cross-fading tab switcher, animated rings/bars, `AnimatedSwitcher` step transitions in the capture overlay.
 
@@ -501,7 +501,7 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 ### 🍡 What It Does
 **Pocko** is an offline-first travel expense tracker and automated bill splitter powered by Firebase AI Logic Hybrid Inference:
 1. **"Light Intelligence" Voice Capture:** Simply tap the glowing center `+`, speak (*"Shinkansen tickets 18,200 yen for Alex, Maya, and me, and matcha latte 650 yen for myself"*). Pocko's on-device AI parses amounts, infers currency, tags the best of 12 travel categories, and assigns individual shares in under 100 milliseconds.
-2. **True Hybrid AI Inference:** Runs Gemini Nano (Android AICore / Chrome Built-in AI) and Apple Foundation Models directly on-device. When complex foreign paper receipts or heavy multi-line photos are captured, it automatically falls back to Gemini 2.5 Flash in the cloud.
+2. **True Hybrid AI Inference:** Runs Gemini Nano (Android AICore / Chrome Built-in AI) and Apple Foundation Models directly on-device. When complex foreign paper receipts or heavy multi-line photos are captured, it automatically falls back to Gemini 3.1 Flash Lite (then 3.8 Flash) in the cloud.
 3. **Smart Slip Matcher (Privacy Shield):** Scans bank notification receipts, masks private bank account numbers locally on-device, and matches them against pending expenses with 1-tap batch approval.
 4. **Greedy Debt Simplification:** Condenses confusing webs of IOUs into the minimum possible transactions ($O(N \log N)$), ensuring at most $N - 1$ transfers settle the entire trip.
 5. **Real-Time 6-Digit Group Sync:** Travelers pair devices effortlessly using a 6-digit Group Code (e.g. `782-901`) with Cloud Firestore offline persistence.
@@ -515,18 +515,18 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 * **Cloud Infrastructure:**
   - **Cloud Firestore:** Configured with `persistenceEnabled: true` for offline-first caching and real-time snapshot listeners.
   - **Firebase Remote Config:** Dynamically updates AI fallback models and prompt overrides over-the-air.
-  - **Firebase App Check & Anonymous Auth:** Secure device attestation with ReCAPTCHA v3 and instant friction-free onboarding.
+  - **Firebase App Check & Anonymous Auth:** Secure device attestation (reCAPTCHA Enterprise on the web, Play Integrity / DeviceCheck on devices) and instant friction-free onboarding.
 * **Visual Craftsmanship:** Material 3 Expressive design, `Plus Jakarta Sans` tabular typography, and an original vector mascot character rendered in Flutter via `CustomPainter` with 5 interactive mood states.
 
 ### 🧗 Challenges We Ran Into
 * **Unifying Three On-Device AI Runtimes:** Android uses AICore/ML Kit, iOS uses Apple Foundation Models, and Chrome uses the W3C Prompt API. We designed a clean unified `MethodChannel` and `dart:js_interop` interface returning consistent telemetry maps across all platforms: `{ rawJson, inferenceSource, latencyMs, modelInfo }`.
-* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 640 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
+* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 642 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
 * **Token Budget Optimization:** Early prompt prototypes occasionally caused on-device LLMs to truncate JSON output. We engineered a compact `<200-word` prompt template that guarantees responses stay under 512 tokens while supporting chained multi-expense sentences.
 
 ### 🏆 Accomplishments We're Proud Of
 * **Fast local inference:** on supported hardware, on-device parsing typically lands in the tens of milliseconds to ~110ms with zero cloud API cost (the telemetry pill shows the real number for every request).
 * **100% Offline Resilience:** You can put your device into Airplane Mode, record multiple expenses in voice or text, and watch Pocko parse, categorize, and calculate balances seamlessly.
-* **100% Green Test Suite:** 640 unit, service, controller and widget tests (45 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
+* **100% Green Test Suite:** 642 unit, service, controller and widget tests (45 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
 * **Delightful Emotional Design:** Our animated Pocko character turns bill-splitting from a chore into a joyful travel companion.
 
 ### 📚 What We Learned
