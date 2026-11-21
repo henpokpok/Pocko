@@ -395,6 +395,37 @@ class AiPolicy {
   );
 }
 
+/// State of the Gemini Nano model on this device (Android AICore).
+class OnDeviceAiStatus {
+  /// `available`, `downloadable`, `downloading`, `unavailable` or
+  /// `unsupported` (no on-device runtime to manage: web, iOS, tests).
+  final String state;
+  final int downloadedBytes;
+  final int totalBytes;
+  final String? error;
+
+  const OnDeviceAiStatus(
+    this.state, {
+    this.downloadedBytes = 0,
+    this.totalBytes = 0,
+    this.error,
+  });
+
+  static const unsupported = OnDeviceAiStatus('unsupported');
+
+  bool get isAvailable => state == 'available';
+  bool get canDownload => state == 'downloadable';
+  bool get isDownloading => state == 'downloading';
+  bool get isManageable => state != 'unsupported';
+
+  factory OnDeviceAiStatus.fromMap(Map<dynamic, dynamic> m) => OnDeviceAiStatus(
+    (m['state'] ?? 'unavailable').toString(),
+    downloadedBytes: (m['downloadedBytes'] as num?)?.toInt() ?? 0,
+    totalBytes: (m['totalBytes'] as num?)?.toInt() ?? 0,
+    error: m['error']?.toString(),
+  );
+}
+
 /// Service governing Hybrid AI Inference across the Firebase AI Logic JS SDK
 /// (Chrome), native MethodChannels (Android AICore Gemini Nano & iOS Apple
 /// Foundation Models) and an honest offline heuristic engine.
@@ -435,6 +466,36 @@ class HybridAiService {
       return AiPolicy.fromRemoteConfig(data);
     } catch (_) {
       return AiPolicy.fromRemoteConfig(RemoteConfigData.initial());
+    }
+  }
+
+  /// Whether Gemini Nano is downloaded on this Android phone (AICore). "On-device
+  /// model is not available" usually just means it has not been downloaded yet.
+  Future<OnDeviceAiStatus> onDeviceStatus() async {
+    if (isMockEnabled || kIsWeb) return OnDeviceAiStatus.unsupported;
+    try {
+      final res = await _channel.invokeMapMethod<String, dynamic>(
+        'onDeviceStatus',
+      );
+      if (res != null) return OnDeviceAiStatus.fromMap(res);
+    } on MissingPluginException {
+      return OnDeviceAiStatus.unsupported;
+    } catch (e) {
+      debugPrint('[HybridAiService] onDeviceStatus failed: $e');
+    }
+    return OnDeviceAiStatus.unsupported;
+  }
+
+  /// Starts the one-time Gemini Nano download (needs internet); poll
+  /// [onDeviceStatus] for progress.
+  Future<void> downloadOnDeviceModel() async {
+    if (isMockEnabled || kIsWeb) return;
+    try {
+      await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'downloadOnDeviceModel',
+      );
+    } catch (e) {
+      debugPrint('[HybridAiService] downloadOnDeviceModel failed: $e');
     }
   }
 

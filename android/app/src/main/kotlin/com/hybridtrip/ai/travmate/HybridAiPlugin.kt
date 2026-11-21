@@ -11,6 +11,9 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.ai.InferenceMode
 import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ai
+import com.google.firebase.ai.ondevice.DownloadStatus
+import com.google.firebase.ai.ondevice.FirebaseAIOnDevice
+import com.google.firebase.ai.ondevice.OnDeviceModelStatus
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.PublicPreviewAPI
 import com.google.firebase.ai.type.content
@@ -22,9 +25,11 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
@@ -84,6 +89,8 @@ class HybridAiPlugin : FlutterPlugin, MethodCallHandler {
         when (call.method) {
             "checkModelStatus" -> handleCheckModelStatus(result)
             "parseExpenseText" -> handleParseExpenseText(call, result)
+            "onDeviceStatus" -> handleOnDeviceStatus(result)
+            "downloadOnDeviceModel" -> handleDownloadOnDeviceModel(result)
             else -> result.notImplemented()
         }
     }
@@ -117,6 +124,74 @@ class HybridAiPlugin : FlutterPlugin, MethodCallHandler {
                 "modelInfo" to info,
             )
         )
+    }
+
+    // --- Gemini Nano (AICore) model lifecycle -------------------------------------------------
+    // "On-device model is not available" usually just means the model has not been downloaded yet.
+
+    @Volatile private var downloadJob: Job? = null
+    @Volatile private var downloadedBytes = 0L
+    @Volatile private var totalBytes = 0L
+    @Volatile private var downloadError: String? = null
+    @Volatile private var downloadDone = false
+
+    @OptIn(PublicPreviewAPI::class)
+    private fun handleOnDeviceStatus(result: Result) {
+        if (!firebaseConfigured()) {
+            result.success(hashMapOf<String, Any>("state" to "unavailable", "error" to "Firebase is not configured"))
+            return
+        }
+        scope.launch {
+            val payload = hashMapOf<String, Any>(
+                "downloadedBytes" to downloadedBytes,
+                "totalBytes" to totalBytes,
+            )
+            downloadError?.let { payload["error"] = it }
+            try {
+                val status = FirebaseAIOnDevice.checkStatus()
+                payload["state"] = when {
+                    status == OnDeviceModelStatus.AVAILABLE -> "available"
+                    status == OnDeviceModelStatus.DOWNLOADING -> "downloading"
+                    status == OnDeviceModelStatus.DOWNLOADABLE -> "downloadable"
+                    else -> "unavailable"
+                }
+            } catch (e: Throwable) {
+                payload["state"] = "unavailable"
+                payload["error"] = e.message ?: e.javaClass.simpleName
+            }
+            result.success(payload)
+        }
+    }
+
+    @OptIn(PublicPreviewAPI::class)
+    private fun handleDownloadOnDeviceModel(result: Result) {
+        if (!firebaseConfigured()) {
+            result.error("AI_UNAVAILABLE", "Firebase is not configured on this build", null)
+            return
+        }
+        if (downloadJob?.isActive == true) {
+            result.success(hashMapOf<String, Any>("started" to false, "state" to "downloading"))
+            return
+        }
+        downloadError = null
+        downloadDone = false
+        downloadedBytes = 0L
+        downloadJob = scope.launch {
+            try {
+                FirebaseAIOnDevice.download().collect { st ->
+                    when (st) {
+                        is DownloadStatus.DownloadStarted -> totalBytes = st.bytesToDownload
+                        is DownloadStatus.DownloadInProgress -> downloadedBytes = st.totalBytesDownloaded
+                        is DownloadStatus.DownloadCompleted -> downloadDone = true
+                        is DownloadStatus.DownloadFailed -> downloadError = "Download failed (check the internet connection and free storage)"
+                        else -> {}
+                    }
+                }
+            } catch (e: Throwable) {
+                downloadError = e.message ?: e.javaClass.simpleName
+            }
+        }
+        result.success(hashMapOf<String, Any>("started" to true, "state" to "downloading"))
     }
 
     private fun handleParseExpenseText(call: MethodCall, result: Result) {

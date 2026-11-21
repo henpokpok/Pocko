@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/pocko_bottom_sheet.dart';
 import '../../core/widgets/pocko_snack.dart';
+import '../../services/hybrid_ai/hybrid_ai_service.dart';
 import '../../services/session/session_store.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../squad/join_group_sheet.dart';
@@ -173,6 +176,8 @@ class _SettingsBody extends ConsumerWidget {
               );
             },
           ),
+          const SizedBox(height: 10),
+          const OnDeviceAiTile(),
           const SizedBox(height: 22),
           Align(
             alignment: Alignment.center,
@@ -243,6 +248,132 @@ class _SettingsBody extends ConsumerWidget {
             },
             child: const Text('Save'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "On-device AI (Gemini Nano)": download status and a one-time download button
+/// on Android phones with AICore. Hidden where there is nothing to manage.
+class OnDeviceAiTile extends ConsumerStatefulWidget {
+  const OnDeviceAiTile({super.key});
+
+  @override
+  ConsumerState<OnDeviceAiTile> createState() => _OnDeviceAiTileState();
+}
+
+class _OnDeviceAiTileState extends ConsumerState<OnDeviceAiTile> {
+  OnDeviceAiStatus? _status;
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    final s = await ref.read(hybridAiServiceProvider).onDeviceStatus();
+    if (!mounted) return;
+    setState(() => _status = s);
+    _poll?.cancel();
+    if (s.isDownloading) {
+      _poll = Timer(const Duration(seconds: 2), _refresh);
+    }
+  }
+
+  Future<void> _download() async {
+    setState(() => _status = const OnDeviceAiStatus('downloading'));
+    await ref.read(hybridAiServiceProvider).downloadOnDeviceModel();
+    _poll?.cancel();
+    _poll = Timer(const Duration(seconds: 1), _refresh);
+  }
+
+  static String _mb(int bytes) => (bytes / 1048576).toStringAsFixed(0);
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _status;
+    if (s == null || !s.isManageable) return const SizedBox.shrink();
+    final String subtitle;
+    if (s.isAvailable) {
+      subtitle = 'Ready. Expenses can be read offline by Gemini Nano.';
+    } else if (s.isDownloading) {
+      subtitle = s.totalBytes > 0
+          ? 'Downloading… ${_mb(s.downloadedBytes)} / ${_mb(s.totalBytes)} MB'
+          : 'Downloading… keep the app open.';
+    } else if (s.canDownload) {
+      subtitle =
+          'Not downloaded yet. Download it once (Wi-Fi recommended) to read '
+          'expenses with no internet.';
+    } else {
+      subtitle =
+          'Not available on this phone right now${s.error == null ? '' : ' (${s.error})'}.';
+    }
+    return Container(
+      key: const ValueKey('settings_on_device_ai'),
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            s.isAvailable
+                ? Icons.memory_rounded
+                : Icons.download_for_offline_rounded,
+            color: AppTheme.primaryEmeraldDark,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'On-device AI (Gemini Nano)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: AppTheme.textSlate,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (s.canDownload)
+            FilledButton(
+              key: const ValueKey('download_nano_button'),
+              onPressed: _download,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primaryEmerald,
+                minimumSize: const Size(0, 38),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+              ),
+              child: const Text('Download'),
+            ),
+          if (s.isDownloading)
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
         ],
       ),
     );

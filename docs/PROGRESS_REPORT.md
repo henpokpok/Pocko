@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **663 / 663 pass** (46 suites) |
+| `flutter test` | **668 / 668 pass** (46 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668.
 
 ---
 
@@ -158,6 +158,11 @@ The built web app was run in the browser against the real Firebase project (App 
 - **Prompts and cross-checks:** `plus 10 percent`, spoken self-corrections (`4,200... oh wait no, 4,800`) and spaced thousands (`2 200`) are handled in the prompt, in `SpokenCorrections` / `SpokenNumbers.collapseSpacedThousands` and in `ExpenseNormalizer`; dictation passes phonetic hints (Michelle = Matcha, Ramming = Ramen, ...); offline dictation collapses `2 200` before analysis.
 - **UI:** the first tap on a highlighted keyword only selects that expense (no keyboard); a second tap or the pencil edits. The transcript scrolls inside a box while Clear and the red banner stay pinned above the fold.
 - **Demo data:** timestamps hang off 15:00 today, so shortly after midnight the demo no longer loses its Today group.
+
+### Phase 16. Samsung S26 follow-ups
+- The floating bottom bar now sits above the 3-button / gesture system bar (`SafeArea`), as does everything laid out below it.
+- Offline voice: the default recognizer ("Speech Services by Google") has its own offline pack, separate from the Samsung keyboard's Voice input pack. On `error_language_unavailable` / `error_network` the app retries once with the on-device recognizer, then stops the mic **once** and shows a banner that opens the keyboard, whose own mic key works offline. No more flipping the mic on and off.
+- Gemini Nano: `FirebaseAIOnDeviceNotAvailableException: On-device model is not available` on the S26 simply meant the model was not downloaded. Settings now has **On-device AI (Gemini Nano)** with status and a one-time Download button (`FirebaseAIOnDevice.checkStatus()` / `download()` through the Android bridge).
 
 ---
 

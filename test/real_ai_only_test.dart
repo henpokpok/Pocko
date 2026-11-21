@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/features/capture/ai_expense_capture_sheet.dart';
+import 'package:travmate/features/settings/settings_sheet.dart';
 import 'package:travmate/services/hybrid_ai/ai_unavailable.dart';
 import 'package:travmate/services/hybrid_ai/expense_normalizer.dart';
 import 'package:travmate/services/hybrid_ai/expense_prompt_builder.dart';
@@ -45,6 +46,21 @@ class _FailingAi extends HybridAiService {
       hasReceipt: hasReceipt,
       fromSpeech: fromSpeech,
     );
+  }
+}
+
+class _NanoAi extends HybridAiService {
+  _NanoAi(this.status) : super(isMockEnabled: true, simulateLatency: false);
+  OnDeviceAiStatus status;
+  int downloads = 0;
+
+  @override
+  Future<OnDeviceAiStatus> onDeviceStatus() async => status;
+
+  @override
+  Future<void> downloadOnDeviceModel() async {
+    downloads++;
+    status = const OnDeviceAiStatus('downloading', totalBytes: 2097152);
   }
 }
 
@@ -427,7 +443,10 @@ void main() {
           find.byKey(const ValueKey('input_error_banner')),
           findsOneWidget,
         );
-        expect(find.textContaining('English speech pack'), findsOneWidget);
+        expect(
+          find.textContaining('Speech Services by Google'),
+          findsOneWidget,
+        );
         expect(find.byIcon(Icons.mic_rounded), findsWidgets);
       },
     );
@@ -441,8 +460,8 @@ void main() {
         await settle(tester, 300);
         stt.error('error_network', permanent: true);
         await settle(tester, 500);
-        expect(find.textContaining('without a connection'), findsOneWidget);
-        expect(find.textContaining('type your expense'), findsOneWidget);
+        expect(find.textContaining('no offline speech pack'), findsOneWidget);
+        expect(find.textContaining('keyboard'), findsOneWidget);
       },
     );
 
@@ -471,6 +490,46 @@ void main() {
         expect(find.byKey(const ValueKey('step_review')), findsOneWidget);
       },
     );
+  });
+
+  group('Gemini Nano download (Settings)', () {
+    testWidgets(
+      'not downloaded: shows a Download button that starts the download',
+      (tester) async {
+        final ai = _NanoAi(const OnDeviceAiStatus('downloadable'));
+        await pumpPocko(tester, const OnDeviceAiTile(), ai: ai);
+        await tester.pump();
+        expect(find.text('On-device AI (Gemini Nano)'), findsOneWidget);
+        expect(find.textContaining('Not downloaded yet'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('download_nano_button')));
+        await tester.pump(const Duration(seconds: 2));
+        expect(ai.downloads, 1);
+        expect(find.textContaining('Downloading'), findsOneWidget);
+      },
+    );
+
+    testWidgets('already available: says it is ready', (tester) async {
+      await pumpPocko(
+        tester,
+        const OnDeviceAiTile(),
+        ai: _NanoAi(const OnDeviceAiStatus('available')),
+      );
+      await tester.pump();
+      expect(find.textContaining('Ready'), findsOneWidget);
+      expect(find.byKey(const ValueKey('download_nano_button')), findsNothing);
+    });
+
+    testWidgets('unsupported (web, iOS, tests): the tile is hidden', (
+      tester,
+    ) async {
+      await pumpPocko(
+        tester,
+        const OnDeviceAiTile(),
+        ai: _NanoAi(OnDeviceAiStatus.unsupported),
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('settings_on_device_ai')), findsNothing);
+    });
   });
 
   test('InferenceSource is untouched by the failure path', () {

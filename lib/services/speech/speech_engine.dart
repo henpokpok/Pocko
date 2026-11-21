@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 /// Called with the recognizer's words and whether the segment is final.
@@ -29,6 +32,15 @@ class PlatformSpeechEngine implements SpeechEngine {
   String? _localeId;
   bool _localeResolved = false;
 
+  // The default recognizer (Speech Services by Google) needs its own offline
+  // pack: the Samsung keyboard's "Voice input" download is a different engine.
+  // When it fails with "language unavailable" / "network", try the phone's
+  // on-device recognizer once, silently, before telling the user.
+  bool _onDevice = false;
+  bool _triedOnDevice = false;
+  SpeechResultCallback? _lastResult;
+  void Function(double level)? _lastLevel;
+
   /// English on purpose (a phone set to Thai would match English speech
   /// against the wrong phonemes), but only a variant this recognizer actually
   /// offers: `en_US`, else any `en_*`, else the system default (`null`).
@@ -54,7 +66,28 @@ class PlatformSpeechEngine implements SpeechEngine {
     required void Function(String status) onStatus,
   }) {
     return _speech.initialize(
-      onError: (e) => onError(e.errorMsg, e.permanent),
+      onError: (e) {
+        final m = e.errorMsg.toLowerCase();
+        final retryable =
+            m.contains('language_unavailable') ||
+            m.contains('language_not_supported') ||
+            m.contains('network') ||
+            m.contains('server');
+        final result = _lastResult;
+        final level = _lastLevel;
+        if (retryable && !_triedOnDevice && result != null && level != null) {
+          _triedOnDevice = true;
+          _onDevice = true;
+          debugPrint(
+            '[STT] ${e.errorMsg}: retrying with the on-device recognizer',
+          );
+          unawaited(
+            listen(onResult: result, onSoundLevel: level).catchError((_) {}),
+          );
+          return;
+        }
+        onError(e.errorMsg, e.permanent);
+      },
       onStatus: onStatus,
     );
   }
@@ -64,12 +97,15 @@ class PlatformSpeechEngine implements SpeechEngine {
     required SpeechResultCallback onResult,
     required void Function(double level) onSoundLevel,
   }) async {
+    _lastResult = onResult;
+    _lastLevel = onSoundLevel;
     final locale = await _pickLocale();
     return _speech.listen(
       onResult: (r) => onResult(r.recognizedWords, r.finalResult),
       onSoundLevelChange: onSoundLevel,
       listenOptions: stt.SpeechListenOptions(
         localeId: locale,
+        onDevice: _onDevice,
         partialResults: true,
         listenMode: stt.ListenMode.dictation,
         pauseFor: const Duration(seconds: 4),

@@ -284,6 +284,9 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
       _mode = CaptureInputMode.type;
       _inputError = message;
     });
+    // Open the keyboard so its own mic key (e.g. Samsung voice input, which
+    // works offline) is one tap away.
+    _focus.requestFocus();
   }
 
   void _onSpeechError(String message, bool permanent) {
@@ -293,17 +296,16 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     if (m.contains('language_unavailable') ||
         m.contains('language_not_supported')) {
       _failVoice(
-        'Offline voice needs the English speech pack on this phone. Install '
-        '"English (US)" for offline speech recognition (Google app → Settings '
-        '→ Voice, or Settings → Voice input), or type your expense.',
+        'No offline speech pack for this mic button (Speech Services by '
+        'Google, English US). Tap the text box and use your keyboard\'s mic '
+        'key instead: Samsung voice input works offline.',
       );
       return;
     }
     if (m.contains('network') || m.contains('server')) {
       _failVoice(
-        'This phone cannot recognize speech without a connection (no offline '
-        'speech pack is installed). Turn off airplane mode for Gemini voice, '
-        'or type your expense.',
+        'No connection and no offline speech pack. Turn off airplane mode for '
+        'Gemini voice, or use your keyboard\'s mic key / type.',
       );
       return;
     }
@@ -1172,7 +1174,15 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
         final showManual =
             _step == CaptureStep.input && !keyboardOpen && avail >= 540;
         // Below ~430 px of visible height the bar no longer fits beside the footer.
-        final showBar = avail >= 430 && _step != CaptureStep.logged;
+        // With the keyboard up AND a banner showing, the member strip yields
+        // its room so the text box stays visible above the keyboard.
+        final bannerUp =
+            _step == CaptureStep.input &&
+            (_aiFailure != null || _inputError != null);
+        final showBar =
+            avail >= 430 &&
+            _step != CaptureStep.logged &&
+            !(keyboardOpen && bannerUp);
         final compactBar = avail < 520;
 
         final mood = switch (_step) {
