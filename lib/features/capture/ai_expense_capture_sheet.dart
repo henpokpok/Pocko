@@ -1795,6 +1795,31 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
                   ),
                 ),
               ),
+            // Soft glow as a pre-computed radial gradient (only its opacity
+            // follows the voice level), instead of an animated blurred shadow.
+            Positioned(
+              left: -26,
+              top: -26,
+              right: -26,
+              bottom: -26,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  key: const ValueKey('mic_glow'),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppTheme.primaryEmerald.withValues(
+                          alpha: 0.4 + level * 0.3,
+                        ),
+                        AppTheme.primaryEmerald.withValues(alpha: 0),
+                      ],
+                      stops: const [0.58, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Tactile(
               onTap: _toggleListening,
               pressedScale: 0.92,
@@ -1808,15 +1833,6 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
                 decoration: BoxDecoration(
                   gradient: AppTheme.emeraldShineGradient,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryEmerald.withValues(
-                        alpha: 0.45 + level * 0.3,
-                      ),
-                      blurRadius: 24 + level * 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
                 ),
                 child: Center(
                   child: Icon(

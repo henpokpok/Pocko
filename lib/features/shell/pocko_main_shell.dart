@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -398,7 +396,7 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
     );
   }
 
-  /// Tablet / desktop navigation: a frosted vertical rail with the center + at
+  /// Tablet / desktop navigation: a translucent vertical rail with the center + at
   /// the top and a single indicator that glides between tabs.
   Widget _buildSideRail(TripState tripState) {
     const itemHeight = 64.0;
@@ -417,75 +415,72 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    width: 1.5,
-                  ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  width: 1.5,
                 ),
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _centerFab(size: 56),
-                        const SizedBox(height: 14),
-                        SizedBox(
-                          height: itemHeight * 4,
-                          width: railWidth,
-                          child: Stack(
-                            children: [
-                              AnimatedPositioned(
-                                key: const ValueKey('nav_indicator'),
-                                duration: const Duration(milliseconds: 260),
-                                curve: Curves.easeOutCubic,
-                                top: slot * itemHeight + (itemHeight - 45) / 2,
-                                left: (railWidth - 56) / 2,
-                                width: 56,
-                                height: 30,
-                                child: const _NavIndicatorPill(),
-                              ),
-                              Column(
-                                children: [
-                                  _buildNavItem(
-                                    index: PockoTabs.home,
-                                    icon: Icons.home_rounded,
-                                    label: 'Home',
-                                    height: itemHeight,
-                                  ),
-                                  _buildNavItem(
-                                    index: PockoTabs.expenses,
-                                    icon: Icons.receipt_long_rounded,
-                                    label: 'Expenses',
-                                    height: itemHeight,
-                                  ),
-                                  _buildNavItem(
-                                    index: PockoTabs.matcher,
-                                    icon: Icons.document_scanner_rounded,
-                                    label: 'Matcher',
-                                    height: itemHeight,
-                                    badgeCount: badge.count,
-                                    badgeNeedsReview: badge.needsReview,
-                                  ),
-                                  _buildNavItem(
-                                    index: PockoTabs.settle,
-                                    icon: Icons.account_balance_wallet_rounded,
-                                    label: 'Settle',
-                                    height: itemHeight,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+              ),
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _centerFab(size: 56),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: itemHeight * 4,
+                        width: railWidth,
+                        child: Stack(
+                          children: [
+                            AnimatedPositioned(
+                              key: const ValueKey('nav_indicator'),
+                              duration: const Duration(milliseconds: 260),
+                              curve: Curves.easeOutCubic,
+                              top: slot * itemHeight + (itemHeight - 45) / 2,
+                              left: (railWidth - 56) / 2,
+                              width: 56,
+                              height: 30,
+                              child: const _NavIndicatorPill(),
+                            ),
+                            Column(
+                              children: [
+                                _buildNavItem(
+                                  index: PockoTabs.home,
+                                  icon: Icons.home_rounded,
+                                  label: 'Home',
+                                  height: itemHeight,
+                                ),
+                                _buildNavItem(
+                                  index: PockoTabs.expenses,
+                                  icon: Icons.receipt_long_rounded,
+                                  label: 'Expenses',
+                                  height: itemHeight,
+                                ),
+                                _buildNavItem(
+                                  index: PockoTabs.matcher,
+                                  icon: Icons.document_scanner_rounded,
+                                  label: 'Matcher',
+                                  height: itemHeight,
+                                  badgeCount: badge.count,
+                                  badgeNeedsReview: badge.needsReview,
+                                ),
+                                _buildNavItem(
+                                  index: PockoTabs.settle,
+                                  icon: Icons.account_balance_wallet_rounded,
+                                  label: 'Settle',
+                                  height: itemHeight,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -511,84 +506,81 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(34),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(34),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.8),
-                width: 1.5,
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.8),
+              width: 1.5,
             ),
-            child: LayoutBuilder(
-              builder: (context, c) {
-                final tabWidth = (c.maxWidth - fabSlot) / 4;
-                final pillWidth = tabWidth.clamp(0.0, 60.0) - 4;
-                final left =
-                    slot * tabWidth +
-                    (slot >= 2 ? fabSlot : 0) +
-                    (tabWidth - pillWidth) / 2;
-                return Stack(
-                  children: [
-                    // One indicator that slides between slots (no rebuild, no flicker).
-                    AnimatedPositioned(
-                      key: const ValueKey('nav_indicator'),
-                      duration: const Duration(milliseconds: 260),
-                      curve: Curves.easeOutCubic,
-                      top: (barHeight - 45) / 2 - 3,
-                      left: left,
-                      width: pillWidth,
-                      height: 30,
-                      child: const _NavIndicatorPill(),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildNavItem(
-                            index: PockoTabs.home,
-                            icon: Icons.home_rounded,
-                            label: 'Home',
-                            height: barHeight,
-                          ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final tabWidth = (c.maxWidth - fabSlot) / 4;
+              final pillWidth = tabWidth.clamp(0.0, 60.0) - 4;
+              final left =
+                  slot * tabWidth +
+                  (slot >= 2 ? fabSlot : 0) +
+                  (tabWidth - pillWidth) / 2;
+              return Stack(
+                children: [
+                  // One indicator that slides between slots (no rebuild, no flicker).
+                  AnimatedPositioned(
+                    key: const ValueKey('nav_indicator'),
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    top: (barHeight - 45) / 2 - 3,
+                    left: left,
+                    width: pillWidth,
+                    height: 30,
+                    child: const _NavIndicatorPill(),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildNavItem(
+                          index: PockoTabs.home,
+                          icon: Icons.home_rounded,
+                          label: 'Home',
+                          height: barHeight,
                         ),
-                        Expanded(
-                          child: _buildNavItem(
-                            index: PockoTabs.expenses,
-                            icon: Icons.receipt_long_rounded,
-                            label: 'Expenses',
-                            height: barHeight,
-                          ),
+                      ),
+                      Expanded(
+                        child: _buildNavItem(
+                          index: PockoTabs.expenses,
+                          icon: Icons.receipt_long_rounded,
+                          label: 'Expenses',
+                          height: barHeight,
                         ),
-                        SizedBox(
-                          width: fabSlot,
-                          child: Center(child: _centerFab()),
+                      ),
+                      SizedBox(
+                        width: fabSlot,
+                        child: Center(child: _centerFab()),
+                      ),
+                      Expanded(
+                        child: _buildNavItem(
+                          index: PockoTabs.matcher,
+                          icon: Icons.document_scanner_rounded,
+                          label: 'Matcher',
+                          height: barHeight,
+                          badgeCount: badge.count,
+                          badgeNeedsReview: badge.needsReview,
                         ),
-                        Expanded(
-                          child: _buildNavItem(
-                            index: PockoTabs.matcher,
-                            icon: Icons.document_scanner_rounded,
-                            label: 'Matcher',
-                            height: barHeight,
-                            badgeCount: badge.count,
-                            badgeNeedsReview: badge.needsReview,
-                          ),
+                      ),
+                      Expanded(
+                        child: _buildNavItem(
+                          index: PockoTabs.settle,
+                          icon: Icons.account_balance_wallet_rounded,
+                          label: 'Settle',
+                          height: barHeight,
                         ),
-                        Expanded(
-                          child: _buildNavItem(
-                            index: PockoTabs.settle,
-                            icon: Icons.account_balance_wallet_rounded,
-                            label: 'Settle',
-                            height: barHeight,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

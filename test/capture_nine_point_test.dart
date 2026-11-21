@@ -377,7 +377,9 @@ void main() {
       expect(find.byKey(const ValueKey('scene_card')), findsOneWidget);
       expect(find.text('4829'), findsOneWidget);
       expect(find.text('Syncs •••• 4829 only'), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 3500));
+      // The scene's clock starts once the page has settled (tickers are paused
+      // while swiping), so the masking finishes a little later.
+      await tester.pump(const Duration(milliseconds: 4500));
       expect(find.text('••••'), findsNWidgets(3));
       expect(find.text('Masked on this device'), findsOneWidget);
     });

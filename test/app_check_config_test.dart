@@ -4,17 +4,21 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/services/firebase/app_check_config.dart';
 
-String _providerKey(WebProvider p) => (p as ReCaptchaEnterpriseProvider).siteKey;
+String _providerKey(WebProvider p) =>
+    (p as ReCaptchaEnterpriseProvider).siteKey;
 
 void main() {
   group('web App Check provider selection', () {
-    test('localhost and 127.0.0.1 use the debug provider, never the real key', () {
-      for (final host in ['localhost', '127.0.0.1', '[::1]']) {
-        final p = webAppCheckProvider(host, key: 'REAL_KEY_123456');
-        expect(p, isA<ReCaptchaEnterpriseProvider>());
-        expect(_providerKey(p), kWebDebugTokenPlaceholder, reason: host);
-      }
-    });
+    test(
+      'localhost and 127.0.0.1 use the debug provider, never the real key',
+      () {
+        for (final host in ['localhost', '127.0.0.1', '[::1]']) {
+          final p = webAppCheckProvider(host, key: 'REAL_KEY_123456');
+          expect(p, isA<ReCaptchaEnterpriseProvider>());
+          expect(_providerKey(p), kWebDebugTokenPlaceholder, reason: host);
+        }
+      },
+    );
 
     test('Firebase Hosting hosts use reCAPTCHA Enterprise with the key', () {
       for (final host in [
@@ -55,7 +59,8 @@ void main() {
     });
 
     test('Dart and JS carry the same Enterprise key ID', () {
-      final m = RegExp('RECAPTCHA_ENTERPRISE_KEY_ID = "([^"]+)"').firstMatch(js);
+      final m = RegExp('RECAPTCHA_ENTERPRISE_KEY_ID = "([^"]+)"')
+          .firstMatch(js);
       expect(m, isNotNull);
       expect(m!.group(1), kRecaptchaEnterpriseKeyId);
     });

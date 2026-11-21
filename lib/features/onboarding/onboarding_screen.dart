@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -122,7 +124,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   late final PageController _pages;
   late int _page;
 
+  /// True while a finger / fling is moving the pages. Idle illustration and
+  /// entrance tickers are paused for that time so the swipe only translates
+  /// cached layers; they resume as soon as the page settles.
+  final ValueNotifier<bool> _swiping = ValueNotifier<bool>(false);
+
   static final int _setupPage = _stories.length;
+
+  /// Pages on each side that stay built: all of them.
+  static const double _pageCount = 4;
 
   @override
   void initState() {
@@ -133,9 +143,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   void dispose() {
+    _swiping.dispose();
     _pages.dispose();
     super.dispose();
   }
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.horizontal || n.depth != 0) return false;
+    if (n is ScrollStartNotification) {
+      _swiping.value = true;
+    } else if (n is ScrollEndNotification) {
+      _swiping.value = false;
+    }
+    return false;
+  }
+
+  /// Every page is built up front, cached as its own raster layer and kept
+  /// alive, with tickers running only for the settled, visible page.
+  Widget _prewarm(int i, Widget child) => _PrewarmedPage(
+    key: ValueKey('prewarm_page_$i'),
+    active: _page == i,
+    swiping: _swiping,
+    child: child,
+  );
 
   void _goTo(int page) {
     _pages.animateToPage(
@@ -256,24 +286,39 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                   Expanded(
-                    child: PageView(
-                      key: const ValueKey('onboarding_pages'),
-                      controller: _pages,
-                      onPageChanged: (p) => setState(() => _page = p),
-                      children: [
-                        for (var i = 0; i < _stories.length; i++)
-                          _StoryPage(
-                            key: ValueKey('story_$i'),
-                            data: _stories[i],
-                            compact: compact,
-                          ),
-                        SingleChildScrollView(
-                          key: const ValueKey('setup_page'),
-                          // The Scaffold already shrinks the body above the keyboard.
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                          child: FirstTripSetupCard(onStart: _startTrip),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: _onScroll,
+                      child: PageView(
+                        key: const ValueKey('onboarding_pages'),
+                        controller: _pages,
+                        onPageChanged: (p) => setState(() => _page = p),
+                        // Scenes 2 and 3 (and the setup form) are built, laid
+                        // out and shader-compiled before the first swipe.
+                        allowImplicitScrolling: true,
+                        scrollCacheExtent: const ScrollCacheExtent.viewport(
+                          _pageCount,
                         ),
-                      ],
+                        children: [
+                          for (var i = 0; i < _stories.length; i++)
+                            _prewarm(
+                              i,
+                              _StoryPage(
+                                key: ValueKey('story_$i'),
+                                data: _stories[i],
+                                compact: compact,
+                              ),
+                            ),
+                          _prewarm(
+                            _setupPage,
+                            SingleChildScrollView(
+                              key: const ValueKey('setup_page'),
+                              // The Scaffold already shrinks the body above the keyboard.
+                              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                              child: FirstTripSetupCard(onStart: _startTrip),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if (!keyboardOpen) ...[
@@ -368,6 +413,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One onboarding page: kept alive, painted into its own layer (a horizontal
+/// swipe then moves a cached texture instead of repainting), and with tickers
+/// muted unless it is the settled, visible page.
+class _PrewarmedPage extends StatefulWidget {
+  final bool active;
+  final ValueListenable<bool> swiping;
+  final Widget child;
+  const _PrewarmedPage({
+    super.key,
+    required this.active,
+    required this.swiping,
+    required this.child,
+  });
+
+  @override
+  State<_PrewarmedPage> createState() => _PrewarmedPageState();
+}
+
+class _PrewarmedPageState extends State<_PrewarmedPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return RepaintBoundary(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: widget.swiping,
+        child: widget.child,
+        builder: (context, swiping, child) =>
+            TickerMode(enabled: widget.active && !swiping, child: child!),
       ),
     );
   }

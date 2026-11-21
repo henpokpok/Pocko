@@ -67,10 +67,10 @@ class AppTheme {
     BoxShadow(color: Color(0x4D10B981), blurRadius: 18, offset: Offset(0, 6)),
   ];
 
-  /// Multi-layer elevation used by hero cards: ambient + key + contact shadow.
+  /// Two-layer elevation used by hero cards: key + contact shadow. Blur radii
+  /// stay at 24 or below so Retina WebGL raster cost stays low.
   static const List<BoxShadow> elevatedCardShadow = [
-    BoxShadow(color: Color(0x0F0F172A), blurRadius: 40, offset: Offset(0, 18)),
-    BoxShadow(color: Color(0x0A0F172A), blurRadius: 16, offset: Offset(0, 6)),
+    BoxShadow(color: Color(0x120F172A), blurRadius: 24, offset: Offset(0, 10)),
     BoxShadow(color: Color(0x080F172A), blurRadius: 3, offset: Offset(0, 1)),
   ];
 

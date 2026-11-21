@@ -34,13 +34,17 @@ class StoryIllustration extends StatelessWidget {
         key: ValueKey('scene_${scene.name}'),
         height: height,
         width: double.infinity,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: switch (scene) {
-            StoryScene.cafe => _CafeScene(animate: animate),
-            StoryScene.slipMatch => _SlipMatchScene(animate: animate),
-            StoryScene.privacyShield => _PrivacyScene(animate: animate),
-          },
+        // Its own repaint boundary: the looping scene repaints only itself, and
+        // a swipe moves it as one cached texture.
+        child: RepaintBoundary(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: switch (scene) {
+              StoryScene.cafe => _CafeScene(animate: animate),
+              StoryScene.slipMatch => _SlipMatchScene(animate: animate),
+              StoryScene.privacyShield => _PrivacyScene(animate: animate),
+            },
+          ),
         ),
       ),
     );

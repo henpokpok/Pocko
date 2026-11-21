@@ -314,17 +314,20 @@ class PockoPainter extends CustomPainter {
   }
 
   void _paintBody(Canvas canvas, double cx, double cy, double radius) {
-    // Soft ground shadow
-    final shadowPaint = Paint()
-      ..color = const Color(0x1F0F172A)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    // Soft ground shadow: a pre-computed radial gradient (no blur mask filter,
+    // which is slow on WebGL / Safari).
+    final shadowRect = Rect.fromCenter(
+      center: Offset(cx, cy + radius + 2),
+      width: radius * 1.9,
+      height: 8,
+    );
     canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(cx, cy + radius + 2),
-        width: radius * 1.5,
-        height: 6,
-      ),
-      shadowPaint,
+      shadowRect,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0x330F172A), Color(0x140F172A), Color(0x000F172A)],
+          stops: [0.0, 0.55, 1.0],
+        ).createShader(shadowRect),
     );
 
     // Coin Mochi Body with Mint Gradient

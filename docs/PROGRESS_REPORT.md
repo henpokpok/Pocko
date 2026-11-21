@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **617 / 617 pass** (42 suites) |
+| `flutter test` | **635 / 635 pass** (44 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635.
 
 ---
 
@@ -139,6 +139,11 @@ The built web app was run in the browser against the real Firebase project (App 
 **Observations:** two of five cloud captures on the first run were slow (7 s, and one that exceeded the 20 s limit and fell back to the labelled offline parser, which produced the correct result); later calls took 1.3 to 4.3 s. The two cosmetic items found (the destination dropdown showed each flag twice, and large amounts clipped in the Net Balance row) were fixed afterwards: the row text no longer repeats the flag, and balance amounts scale to fit.
 
 **Cleanup:** the temporary trip document created for this run (`trips/977-269`) was deleted with the Firebase CLI and the test server stopped. Trip documents belonging to the phone and iPad installs were left alone.
+
+### Phase 13. Firebase Hosting, App Check on the web, and first-swipe smoothness
+- **Hosting:** `firebase.json` serves `build/web` with a single-page rewrite; the live site is `https://pocko-hybrid-ai.web.app`. `.js`, `.html` and `.json` are served with `no-cache` so a redeploy is picked up at once (a one-hour browser cache had kept an old key alive after a deploy).
+- **App Check on the web:** production hosts use reCAPTCHA Enterprise (Dart in `lib/services/firebase/app_check_config.dart` and the AI Logic bridge in `web/firebase_ai_web.js`); the debug token is only ever used on `localhost` / `127.0.0.1`. A first key from the wrong Cloud project failed with HTTP 400 on the token exchange; the key from the `pocko-hybrid-ai` project returns 200 and a live Gemini capture was confirmed on the hosted URL.
+- **First-swipe smoothness (iPad Safari / Chrome):** all onboarding pages are built up front (`allowImplicitScrolling` plus a 4-page cache extent and keep-alive), each in its own `RepaintBoundary`; scene tickers run only for the settled, visible page and are paused while swiping. Backdrop blurs (side rail, bottom bar, `GlassCard`), the mascot's blurred ground shadow and the animated mic glow were replaced by plain translucent fills and pre-computed radial gradients, and the hero shadow was reduced to two layers (max blur 24). Plus Jakarta Sans weights are preloaded before the first frame with a 2.5 s timeout (`lib/core/theme/font_prewarm.dart`).
 
 ---
 

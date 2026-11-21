@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/font_prewarm.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/pocko_main_shell.dart';
 import 'firebase_options.dart';
@@ -17,6 +18,11 @@ import 'services/session/session_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Start loading every font weight right away; it runs while Firebase and
+  // local storage initialize and is awaited (with a short timeout) before the
+  // first frame.
+  final fontsReady = FontPrewarm.prewarm();
 
   // Initialize Firebase with App Check, Anonymous Auth, Offline Persistence, and Remote Config
   try {
@@ -82,6 +88,8 @@ void main() async {
   } catch (e) {
     debugPrint('[SessionStore] Local storage unavailable: $e');
   }
+
+  await fontsReady;
 
   runApp(
     ProviderScope(
