@@ -226,7 +226,7 @@ void main() {
   });
 
   testWidgets(
-    'Local sample: PII is masked on-device, auto-matches TeamLab and shows a (Sim) footer',
+    'Local sample: PII is masked on-device, auto-matches TeamLab and shows an (Offline Rules) footer',
     (tester) async {
       final container = await pumpPocko(
         tester,
@@ -249,7 +249,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('(Sim) • '),
+          matching: find.textContaining('(Offline Rules) • '),
         ),
         findsOneWidget,
         reason: 'simulated engine is labelled honestly',
@@ -282,7 +282,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('☁️ (Sim) • '),
+          matching: find.textContaining('📴 (Offline Rules) • '),
         ),
         findsOneWidget,
       );

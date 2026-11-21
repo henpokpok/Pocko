@@ -62,7 +62,7 @@ void main() {
       expect(find.text('840 ms'), findsOneWidget);
     });
 
-    testWidgets('Simulated results carry a SIM tag; compact variant is short', (
+    testWidgets('Offline results say Offline • Local Rules, never SIM; compact variant is short', (
       tester,
     ) async {
       await pump(
@@ -73,7 +73,8 @@ void main() {
           simulated: true,
         ),
       );
-      expect(find.text('SIM'), findsOneWidget);
+      expect(find.text('SIM'), findsNothing);
+      expect(find.textContaining('Offline • Local Rules'), findsOneWidget);
 
       await pump(
         tester,

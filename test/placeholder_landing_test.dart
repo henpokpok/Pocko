@@ -433,12 +433,13 @@ void main() {
     });
 
     testWidgets(
-      'on-device says so, and the offline parser says Offline fallback',
+      'on-device says On-Device AI, and the offline parser says Offline • Local Rules',
       (tester) async {
         await tester.pumpWidget(pill(InferenceSource.onDevice));
-        expect(find.text('🟢 On-Device • Gemini Nano'), findsOneWidget);
+        expect(find.text('🟢 On-Device AI • Gemini Nano'), findsOneWidget);
         await tester.pumpWidget(pill(InferenceSource.onDevice, sim: true));
-        expect(find.text('📴 Offline fallback • local parser'), findsOneWidget);
+        expect(find.text('📴 Offline • Local Rules'), findsOneWidget);
+        expect(find.text('SIM'), findsNothing);
       },
     );
 
@@ -453,7 +454,8 @@ void main() {
       await tester.tap(_k('confirm_button'));
       await settle(tester, 1500);
       expect(_k('ai_source_badge'), findsOneWidget);
-      expect(find.textContaining('Offline fallback'), findsOneWidget);
+      expect(find.textContaining('Offline • Local Rules'), findsOneWidget);
+      expect(find.textContaining('SIM'), findsNothing);
     });
   });
 

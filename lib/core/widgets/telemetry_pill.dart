@@ -37,7 +37,7 @@ class TelemetryPill extends StatelessWidget {
     this.plain = false,
   });
 
-  String get _emoji => plain && simulated
+  String get _emoji => simulated
       ? '📴'
       : source == InferenceSource.onDevice
       ? '🟢'
@@ -51,10 +51,10 @@ class TelemetryPill extends StatelessWidget {
   }
 
   String get _title {
+    if (simulated) return 'Offline';
     if (plain) {
-      if (simulated) return 'Offline fallback';
       if (source == InferenceSource.inCloud) return 'Cloud Gemini';
-      if (source == InferenceSource.onDevice) return 'On-Device';
+      if (source == InferenceSource.onDevice) return 'On-Device AI';
     }
     switch (source) {
       case InferenceSource.onDevice:
@@ -83,7 +83,7 @@ class TelemetryPill extends StatelessWidget {
         ? [
             '$_emoji $_title',
             if (simulated)
-              'local parser'
+              'Local Rules'
             else if (source == InferenceSource.inCloud)
               _cloudModel
             else if (source == InferenceSource.onDevice)
@@ -91,12 +91,15 @@ class TelemetryPill extends StatelessWidget {
           ].join(' • ')
         : [
             '$_emoji $_title',
-            if (source != InferenceSource.manual) source.engineLabel(modelInfo),
+            if (simulated)
+              'Local Rules'
+            else if (source != InferenceSource.manual)
+              source.engineLabel(modelInfo),
           ].join(' • ');
 
     return Semantics(
       label:
-          'AI source $_title${ms != null ? ', $ms milliseconds' : ''}${simulated ? ', simulated' : ''}',
+          'AI source $_title${ms != null ? ', $ms milliseconds' : ''}${simulated ? ', offline local rules' : ''}',
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: compact ? 8 : 11,
@@ -142,21 +145,6 @@ class TelemetryPill extends StatelessWidget {
                 ),
               ),
             ],
-            if (simulated) ...[
-              const SizedBox(width: 5),
-              Tooltip(
-                message: 'Offline heuristic engine (no live on-device or cloud model reachable)',
-                child: Text(
-                  'SIM',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.6,
-                    color: fg.withValues(alpha: 0.65),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -165,7 +153,7 @@ class TelemetryPill extends StatelessWidget {
 }
 
 /// Compact footer badge shown at the very bottom of Matcher and Expense cards:
-/// `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `🟢 (Sim) • 92ms` when the
+/// `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `📴 (Offline Rules) • 92ms` when the
 /// offline engine answered because no live runtime is configured.
 class TelemetryFooter extends StatelessWidget {
   final InferenceSource source;
@@ -186,13 +174,14 @@ class TelemetryFooter extends StatelessWidget {
     bool simulated = false,
   }) {
     final emoji = switch (source) {
+      _ when simulated => '📴',
       InferenceSource.onDevice => '🟢',
       InferenceSource.inCloud => '☁️',
       InferenceSource.manual => '✏️',
     };
     if (source == InferenceSource.manual) return '$emoji (Manual)';
     final kind = simulated
-        ? 'Sim'
+        ? 'Offline Rules'
         : (source == InferenceSource.onDevice ? 'Local' : 'Cloud');
     return latencyMs == null
         ? '$emoji ($kind)'

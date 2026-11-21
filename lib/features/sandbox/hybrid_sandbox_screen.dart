@@ -634,7 +634,7 @@ class _HybridSandboxScreenState extends ConsumerState<HybridSandboxScreen> {
                       ),
                     ),
                     Text(
-                      'Skip real runtimes and use the offline heuristic engine (results are tagged SIM)',
+                      'Skip real runtimes and use the offline heuristic engine (results are labelled Offline • Local Rules)',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: AppTheme.textSlate,

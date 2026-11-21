@@ -97,8 +97,8 @@ void main() {
         final scrim = tester.widget<ColoredBox>(
           find.byKey(const ValueKey('capture_scrim')),
         );
-        expect(scrim.color, const Color(0xD9070F18));
-        expect(scrim.color.a, closeTo(0.85, 0.005));
+        expect(scrim.color, const Color(0xE6070F18));
+        expect(scrim.color.a, closeTo(0.90, 0.005));
 
         // Full-bleed: the page keeps its exact size (scale 1.0), with no
         // scale transform and no rounded clip inset around it, so no black

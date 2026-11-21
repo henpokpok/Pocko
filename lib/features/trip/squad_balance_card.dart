@@ -85,7 +85,9 @@ class SquadBalanceCard extends StatelessWidget {
                     net: tripState.netBalances[member.id] ?? 0.0,
                     currency: trip.baseCurrency,
                   ),
-                if (showInviteOrb)
+                // The header already has "Manage Group →"; the extra invite orb
+                // only shows for small groups, so a 4+ person row never clips.
+                if (showInviteOrb && trip.members.length < 4)
                   Tactile(
                     onTap: onManage,
                     semanticLabel: 'Invite a friend',

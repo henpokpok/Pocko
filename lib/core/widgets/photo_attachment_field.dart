@@ -177,6 +177,8 @@ class _PhotoAttachmentFieldState extends State<PhotoAttachmentField> {
                   child: Image.memory(
                     bytes,
                     fit: BoxFit.cover,
+                    // The preview is at most a phone wide: decode it that small.
+                    cacheWidth: 900,
                     gaplessPlayback: true,
                     errorBuilder: (_, _, _) =>
                         const Center(child: Text('Photo cannot be shown')),

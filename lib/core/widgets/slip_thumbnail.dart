@@ -41,6 +41,10 @@ class SlipThumbnail extends StatelessWidget {
           ? Image.memory(
               bytes,
               fit: BoxFit.cover,
+              // Decode at thumbnail size (x3 for dense screens), not at the
+              // camera's full resolution.
+              cacheWidth: (width * 3).round(),
+              gaplessPlayback: true,
               errorBuilder: (_, _, _) => _paper(),
             )
           : _paper(),

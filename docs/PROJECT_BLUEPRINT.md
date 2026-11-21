@@ -131,7 +131,7 @@ The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini •
 The center `+` raises the **Light Intelligence overlay** ([`ai_expense_capture_sheet.dart`](../lib/features/capture/ai_expense_capture_sheet.dart)), hosted *inline* by `PockoMainShell` through [`CaptureOverlayHost`](../lib/features/capture/capture_overlay_host.dart). There is **no blur filter anywhere in the capture flow** (animating a full-screen Gaussian blur drops frames). The "dim & drop" transition only animates opacity and a transform, both composited on the GPU:
 
 * the live page stays **full-bleed at 1.0×** (no scale transform, no rounded clip inset, so no black frame appears at the screen edges),
-* a clean dark scrim (`Color(0xD9070F18)`, **~85%**, 240 ms, `Curves.easeOutCubic`) fades in over it, so the page stays recognizable but foreground text and pills have crisp contrast,
+* a clean dark scrim (`Color(0xE6070F18)`, **~90%**, 240 ms, `Curves.easeOutCubic`) fades in over it, so the page stays recognizable but foreground text and pills have crisp contrast,
 * the capture UI fades in on top; closing reverses everything and unmounts the overlay.
 
 ```mermaid
@@ -147,7 +147,7 @@ sequenceDiagram
     participant Store as TripController & Firestore
 
     User->>Host: Taps Center '+'
-    Host->>Host: ~85% dark scrim fades in over the full-bleed page (no blur, no scale)
+    Host->>Host: ~90% dark scrim fades in over the full-bleed page (no blur, no scale)
     Host->>Overlay: Pocko zooms 0.55 -> 1.0 (240px hero)
     User->>Speech: Speaks (green gradient sweeps over the live text) or types
     User->>Overlay: Tags group members on the always-visible strip
@@ -520,13 +520,13 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 
 ### 🧗 Challenges We Ran Into
 * **Unifying Three On-Device AI Runtimes:** Android uses AICore/ML Kit, iOS uses Apple Foundation Models, and Chrome uses the W3C Prompt API. We designed a clean unified `MethodChannel` and `dart:js_interop` interface returning consistent telemetry maps across all platforms: `{ rawJson, inferenceSource, latencyMs, modelInfo }`.
-* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 635 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
+* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 640 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
 * **Token Budget Optimization:** Early prompt prototypes occasionally caused on-device LLMs to truncate JSON output. We engineered a compact `<200-word` prompt template that guarantees responses stay under 512 tokens while supporting chained multi-expense sentences.
 
 ### 🏆 Accomplishments We're Proud Of
 * **Fast local inference:** on supported hardware, on-device parsing typically lands in the tens of milliseconds to ~110ms with zero cloud API cost (the telemetry pill shows the real number for every request).
 * **100% Offline Resilience:** You can put your device into Airplane Mode, record multiple expenses in voice or text, and watch Pocko parse, categorize, and calculate balances seamlessly.
-* **100% Green Test Suite:** 635 unit, service, controller and widget tests (44 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
+* **100% Green Test Suite:** 640 unit, service, controller and widget tests (45 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
 * **Delightful Emotional Design:** Our animated Pocko character turns bill-splitting from a chore into a joyful travel companion.
 
 ### 📚 What We Learned

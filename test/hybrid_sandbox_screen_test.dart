@@ -76,7 +76,9 @@ void main() {
       await tester.tap(find.text('Process with Hybrid AI'));
       await settle(tester, 800);
 
-      expect(find.text('☁️ Cloud Fallback • Gemini Flash'), findsOneWidget);
+      // The test engine is the offline simulation, so the badge must say so (and never SIM).
+      expect(find.text('📴 Offline • Local Rules'), findsOneWidget);
+      expect(find.text('SIM'), findsNothing);
       expect(find.text('¥650'), findsOneWidget);
       expect(find.text('Snacks & Cafe'), findsOneWidget);
       expect(find.text('View Raw JSON Response from AI'), findsOneWidget);

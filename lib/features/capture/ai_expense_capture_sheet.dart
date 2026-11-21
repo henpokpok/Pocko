@@ -1030,15 +1030,15 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final keyboard = media.viewInsets.bottom;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final keyboardOpen = keyboard > 0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.hasBoundedHeight
             ? constraints.maxHeight
-            : media.size.height;
+            : screenHeight;
         // Height the user can actually see (the keyboard eats the rest).
         final avail = height - keyboard;
         final tight = keyboardOpen || avail < 560;

@@ -110,7 +110,18 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
 
   @override
   Widget build(BuildContext context) {
-    final tripState = ref.watch(tripControllerProvider);
+    // Only what the chrome shows (trip name, sync dot, Matcher badge): typing,
+    // balance changes and unrelated edits no longer rebuild the whole shell.
+    final slice = ref.watch(
+      tripControllerProvider.select(
+        (s) => (
+          hasTrip: s.hasTrip,
+          name: s.trip.name,
+          sync: s.syncStatus,
+          badge: _slipBadge(s),
+        ),
+      ),
+    );
     final isWide = Breakpoints.isWide(context);
 
     // A brand-new trip (Setup Wizard / Demo Trip) always lands on Home.
@@ -169,18 +180,18 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
       extendBody: !isWide,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
-        child: _buildTopBar(tripState),
+        child: _buildTopBar(slice),
       ),
       body: isWide
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildSideRail(tripState),
+                _buildSideRail(slice.badge),
                 Expanded(child: content),
               ],
             )
           : content,
-      bottomNavigationBar: isWide ? null : _buildFloatingBottomBar(tripState),
+      bottomNavigationBar: isWide ? null : _buildFloatingBottomBar(slice.badge),
     );
 
     // "Dim & drop": the page scales back under a light scrim while the capture
@@ -201,12 +212,20 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
     );
   }
 
-  Widget _buildTopBar(TripState tripState) {
+  Widget _buildTopBar(
+    ({
+      bool hasTrip,
+      String name,
+      SyncStatus sync,
+      ({int count, bool needsReview}) badge,
+    })
+    slice,
+  ) {
     final currentTab =
         (_currentTabIndex >= 0 && _currentTabIndex < _tabNames.length)
         ? _tabNames[_currentTabIndex]
         : '';
-    final tripName = tripState.hasTrip ? tripState.trip.name : 'No trip yet';
+    final tripName = slice.hasTrip ? slice.name : 'No trip yet';
     final label = currentTab.isNotEmpty ? '$tripName • $currentTab' : tripName;
 
     final narrow = MediaQuery.sizeOf(context).width < 360;
@@ -250,13 +269,13 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
               ),
             ),
             Tooltip(
-              message: tripState.syncStatus.label,
+              message: slice.sync.label,
               child: Container(
                 margin: const EdgeInsets.only(left: 5, top: 4),
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _syncColor(tripState.syncStatus),
+                  color: _syncColor(slice.sync),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -398,11 +417,10 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
 
   /// Tablet / desktop navigation: a translucent vertical rail with the center + at
   /// the top and a single indicator that glides between tabs.
-  Widget _buildSideRail(TripState tripState) {
+  Widget _buildSideRail(({int count, bool needsReview}) badge) {
     const itemHeight = 64.0;
     const railWidth = 88.0;
     final slot = _slotOfTab[_currentTabIndex] ?? 0;
-    final badge = _slipBadge(tripState);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 0, 16),
@@ -491,11 +509,10 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
     );
   }
 
-  Widget _buildFloatingBottomBar(TripState tripState) {
+  Widget _buildFloatingBottomBar(({int count, bool needsReview}) badge) {
     const fabSlot = 64.0;
     const barHeight = 68.0;
     final slot = _slotOfTab[_currentTabIndex] ?? 0;
-    final badge = _slipBadge(tripState);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),

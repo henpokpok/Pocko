@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **635 / 635 pass** (44 suites) |
+| `flutter test` | **640 / 640 pass** (45 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640.
 
 ---
 
@@ -84,7 +84,7 @@ Offline recognition still mis-heard words, followed the phone's non-English loca
 - **Online path (primary):** one uninterrupted recording (`record` package; AAC `audio/mp4` on Android/iOS, WAV on Web) with a silence detector (adaptive noise floor, 3.5 s after speech started). The audio goes to Gemini as inline data on Web, Android and iOS with the trip context, and one call returns `{"transcript", "items"}`. The transcript fills the capture view and is saved as the Original Voice Prompt.
 - **Offline path (fallback):** `speech_to_text` pinned to `en_US` and dictation mode; `DictationBuffer` keeps each segment's high-water mark so dips, empty partials and a missing `finalResult` never lose words.
 - **Edit Expense sheet:** fixed nine-section order (Title, Amount, Date & Time, Category, Paid By, Receipt Photo, Split, Note, Original Voice Prompt) and stadium-pill buttons.
-- **Capture overlay:** the 0.965 scale and rounded inset were removed, which had caused a black border; the page stays full-bleed under the 85% scrim.
+- **Capture overlay:** the 0.965 scale and rounded inset were removed, which had caused a black border; the page stays full-bleed under the 90% scrim.
 
 ### Phase 9. Problems found on the Galaxy after that
 | Problem | Cause | Fix |
@@ -144,6 +144,13 @@ The built web app was run in the browser against the real Firebase project (App 
 - **Hosting:** `firebase.json` serves `build/web` with a single-page rewrite; the live site is `https://pocko-hybrid-ai.web.app`. `.js`, `.html` and `.json` are served with `no-cache` so a redeploy is picked up at once (a one-hour browser cache had kept an old key alive after a deploy).
 - **App Check on the web:** production hosts use reCAPTCHA Enterprise (Dart in `lib/services/firebase/app_check_config.dart` and the AI Logic bridge in `web/firebase_ai_web.js`); the debug token is only ever used on `localhost` / `127.0.0.1`. A first key from the wrong Cloud project failed with HTTP 400 on the token exchange; the key from the `pocko-hybrid-ai` project returns 200 and a live Gemini capture was confirmed on the hosted URL.
 - **First-swipe smoothness (iPad Safari / Chrome):** all onboarding pages are built up front (`allowImplicitScrolling` plus a 4-page cache extent and keep-alive), each in its own `RepaintBoundary`; scene tickers run only for the settled, visible page and are paused while swiping. Backdrop blurs (side rail, bottom bar, `GlassCard`), the mascot's blurred ground shadow and the animated mic glow were replaced by plain translucent fills and pre-computed radial gradients, and the hero shadow was reduced to two layers (max blur 24). Plus Jakarta Sans weights are preloaded before the first frame with a 2.5 s timeout (`lib/core/theme/font_prewarm.dart`).
+
+### Phase 14. Review fixes after the gallery screenshots
+- The badge for the offline rules engine now reads `Offline • Local Rules` (footer: `(Offline Rules)`); the word SIM no longer appears anywhere in the UI. Native on-device results read `On-Device AI`.
+- The capture scrim is 90% opaque so the dashboard behind it no longer bleeds through the highlighted prompt.
+- The Group Net Balance row omits the extra "+ Group Invite" orb for groups of four or more, so nothing clips at 412 px.
+- Cloud models: `gemini-3.1-flash-lite`, then `gemini-3.8-flash`. A live check on the hosted site showed `gemini-2.5-flash` answers 404 ("no longer available to new users, use gemini-3.8-flash"), so it is deliberately not used. README rows that still said 2.5 Flash were corrected.
+- Rebuild scope: the app shell watches only the trip name, sync status and Matcher badge; `MediaQuery.sizeOf` / `viewInsetsOf` replace `MediaQuery.of`; slip and receipt images decode at display size (`cacheWidth`).
 
 ---
 

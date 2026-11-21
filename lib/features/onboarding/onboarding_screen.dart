@@ -222,8 +222,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final onSetup = _page == _setupPage;
-    final media = MediaQuery.of(context);
-    final compact = media.size.height < 640;
+    final compact = MediaQuery.sizeOf(context).height < 640;
     // With the soft keyboard up the footer (dots + Next / Demo button) is hidden
     // instead of being pushed above the keyboard, so the form keeps the room.
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;

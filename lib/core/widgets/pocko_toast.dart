@@ -168,8 +168,8 @@ class _PockoToastCardState extends State<_PockoToastCard>
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final wide = media.size.width >= 768;
+    final wide = MediaQuery.sizeOf(context).width >= 768;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final look = _look;
     final curved = CurvedAnimation(
       parent: _enter,
@@ -180,7 +180,7 @@ class _PockoToastCardState extends State<_PockoToastCard>
     return Positioned(
       left: 16,
       right: 16,
-      bottom: (wide ? 16.0 : 96.0) + media.viewInsets.bottom,
+      bottom: (wide ? 16.0 : 96.0) + keyboardInset,
       child: SafeArea(
         top: false,
         child: Align(

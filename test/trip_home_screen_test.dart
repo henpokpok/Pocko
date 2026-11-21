@@ -29,7 +29,8 @@ void main() {
       for (final name in ['You', 'Alex', 'Maya', 'Liam']) {
         expect(find.text(name), findsWidgets);
       }
-      expect(find.text('+ Group'), findsOneWidget);
+      // With 4 members the redundant invite orb is omitted (Manage Group → is in the header).
+      expect(find.text('+ Group'), findsNothing);
       expect(find.text('Manage Group →'), findsOneWidget);
       expect(find.textContaining('Squad'), findsNothing);
       expect(find.textContaining('squad'), findsNothing);

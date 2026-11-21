@@ -5,7 +5,7 @@
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-635%2F635%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-640%2F640%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -28,14 +28,14 @@
 
 Traveling with friends should create lasting memories—not endless spreadsheets, crumpled receipts, or awkward Venmo requests. **Pocko** is an offline-first travel expense tracker and automated debt simplifier engineered with a **genuine hybrid AI inference runtime**. 
 
-Whether you are deep inside the Tokyo subway with zero cell service, hiking in the Swiss Alps, or splitting a street food banquet in Bangkok, Pocko processes natural voice dictation and typed multi-expense notes **locally on-device in under 100 milliseconds** at zero cloud cost. When complex foreign receipts, currency conversion insights, or multi-line slip photos are captured, Pocko smoothly orchestrates cloud fallback to **Gemini 2.5 Flash** via Firebase AI Logic.
+Whether you are deep inside the Tokyo subway with zero cell service, hiking in the Swiss Alps, or splitting a street food banquet in Bangkok, Pocko processes natural voice dictation and typed multi-expense notes **locally on-device in under 100 milliseconds** at zero cloud cost. When complex foreign receipts, currency conversion insights, or multi-line slip photos are captured, Pocko smoothly orchestrates cloud fallback to **Gemini 3.1 Flash Lite → Gemini 3.8 Flash** via Firebase AI Logic.
 
 ### Target Platforms
 | Platform | Target Hardware / Environment | Hybrid AI Engine | Bridge Mechanism |
 |---|---|---|---|
-| 🌐 **Web** | Chrome Desktop & Chromium Browsers | Chrome Built-in AI (W3C Prompt API) + Gemini 2.5 Flash | `dart:js_interop` + [`web/firebase_ai_web.js`](web/firebase_ai_web.js) |
-| 🤖 **Android** | Samsung Galaxy S26+ & Pixel 9+ (Android 14+) | Gemini Nano via Android AICore / ML Kit + Gemini 2.5 Flash | `MethodChannel` + [`HybridAiPlugin.kt`](android/app/src/main/kotlin/com/hybridtrip/ai/travmate/HybridAiPlugin.kt) |
-| 🍏 **iOS / iPadOS** | iPad Air M4 & iPhone 16+ (iPadOS 26+ / iOS 18+) | Apple Foundation Models on-device + Gemini 2.5 Flash | `MethodChannel` + [`HybridAiPlugin.swift`](ios/Runner/HybridAiPlugin.swift) |
+| 🌐 **Web** | Chrome Desktop & Chromium Browsers | Chrome Built-in AI (W3C Prompt API) + Gemini 3.1 Flash Lite → Gemini 3.8 Flash | `dart:js_interop` + [`web/firebase_ai_web.js`](web/firebase_ai_web.js) |
+| 🤖 **Android** | Samsung Galaxy S26+ & Pixel 9+ (Android 14+) | Gemini Nano via Android AICore / ML Kit + Gemini 3.1 Flash Lite → Gemini 3.8 Flash | `MethodChannel` + [`HybridAiPlugin.kt`](android/app/src/main/kotlin/com/hybridtrip/ai/travmate/HybridAiPlugin.kt) |
+| 🍏 **iOS / iPadOS** | iPad Air M4 & iPhone 16+ (iPadOS 26+ / iOS 18+) | Apple Foundation Models on-device + Gemini 3.1 Flash Lite → Gemini 3.8 Flash | `MethodChannel` + [`HybridAiPlugin.swift`](ios/Runner/HybridAiPlugin.swift) |
 
 ---
 
@@ -48,7 +48,7 @@ Whether you are deep inside the Tokyo subway with zero cell service, hiking in t
 * **Awkward Web of Debts:** In a 4-person trip, settling debts often results in a convoluted web of 6–10 repetitive peer-to-peer transfers with foreign exchange conversion confusion.
 
 ### The Pocko Solution
-1. **3-Second "Light Intelligence" Capture:** Tap the glowing center `+`: the live page stays full-bleed at 1.0x under a clean ~85% dark scrim that fades in across the whole screen (**no blur**, no shrink, no black border, so it stays buttery) while a giant 240 px Pocko zooms in. Speak (it waits **3.5 s of dead air** before auto-confirming) or type naturally (*"Ramen 1 thousand with Alex, Maya and Liam, taxi 2.5k for me"*): spoken multipliers (`thousand`, `thousan`, `k`, `million`, `m`...) become numbers, every mentioned member is picked up, and one **Confirm** starts the analysis while your words shimmer. The sentence returns with tappable item, price **and member-name** highlights; the category pill sits on its own row under it, a live mini expense card previews exactly how the entry will look, and the name-only member pills stay in two-way sync with the highlighted names. A second **Confirm** saves. A subtle **Manual Expense** action opens the standard Add Expense sheet, where Pocko suggests a category after 2.5 s of idle typing.
+1. **3-Second "Light Intelligence" Capture:** Tap the glowing center `+`: the live page stays full-bleed at 1.0x under a clean ~90% dark scrim that fades in across the whole screen (**no blur**, no shrink, no black border, so it stays buttery) while a giant 240 px Pocko zooms in. Speak (it waits **3.5 s of dead air** before auto-confirming) or type naturally (*"Ramen 1 thousand with Alex, Maya and Liam, taxi 2.5k for me"*): spoken multipliers (`thousand`, `thousan`, `k`, `million`, `m`...) become numbers, every mentioned member is picked up, and one **Confirm** starts the analysis while your words shimmer. The sentence returns with tappable item, price **and member-name** highlights; the category pill sits on its own row under it, a live mini expense card previews exactly how the entry will look, and the name-only member pills stay in two-way sync with the highlighted names. A second **Confirm** saves. A subtle **Manual Expense** action opens the standard Add Expense sheet, where Pocko suggests a category after 2.5 s of idle typing.
 2. **100% Offline-First Architecture:** On-device local LLM execution paired with Cloud Firestore offline persistence ensures zero downtime anywhere in the world.
 3. **Smart Slip Matcher (Privacy Shield, "Grade Pocko's work"):** Upload a slip photo or run a curated sample. Card numbers, IBANs, e-mails and holder names are masked on-device *before* any model sees them; plain bank notifications stay on 🟢 local AI while itemized foreign receipts use the ☁️ cloud fallback. Slips never sync to your group. Every logged expense sits side by side with its candidate slip: tap **✓ Correct** or **✕ Wrong** (pick a different slip, add one, or choose *Paid in Cash (No Slip Needed)*). Each card carries a compact telemetry footer such as `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `(Sim) • 48ms`.
 4. **Greedy Debt Simplification ($O(N \log N)$):** Automatically reduces multi-party webs of debt to a maximum of $N - 1$ optimal transfers with 1-click settlement.
@@ -61,7 +61,7 @@ Pocko implements the official **`PREFER_ON_DEVICE`** hybrid paradigm. It doesn't
 
 | Attribute | 🟢 On-Device Inference (`PREFER_ON_DEVICE`) | ☁️ Cloud Fallback (`IN_CLOUD`) |
 |---|---|---|
-| **Primary Engine** | **Gemini Nano 4** (AICore) / **Apple Foundation Models** / **Chrome Prompt API** | **Gemini 2.5 Flash** via Firebase AI Logic |
+| **Primary Engine** | **Gemini Nano 4** (AICore) / **Apple Foundation Models** / **Chrome Prompt API** | **Gemini 3.1 Flash Lite → Gemini 3.8 Flash** via Firebase AI Logic |
 | **Typical Latency** | **45ms – 110ms** (Instant, zero network roundtrip) | **650ms – 1,400ms** (Network dependent) |
 | **Connectivity** | **100% Offline** (Airplanes, subways, remote trails) | Requires active Internet connection |
 | **Privacy & Security** | Data never leaves device RAM; local PII/account masking | Processed via enterprise Google Cloud security |
@@ -236,17 +236,17 @@ flowchart TD
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
 | **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & ReCAPTCHA v3 protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 44 test suites (635 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 45 test suites (640 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 44 test suites (635 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 45 test suites (640 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +635: All tests passed!
+flutter test      # 00:08 +640: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
@@ -256,7 +256,7 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `hybrid_ai_service_test`, `expense_prompt_builder_test` | English parsing (multi-expense, payers, splits, currencies), Remote Config policy, prompt templates, receipts |
 | `slip_pipeline_test` | PII masking, match tiers, local-vs-cloud routing for the four sample slips |
 | `squad_sync_service_test` | Firestore (de)serialization, malformed documents, offline behaviour |
-| `*_screen_test`, `pocko_main_shell_test` | Reactive UI across Home (Top Expenses, nav badge, no banners) / Expenses (date strip, `showCheckmark: false`, time metadata) / Matcher (✓ Correct, ✕ Wrong, Paid in Cash, telemetry footer) / Settle (transfer lanes, itemized breakdown, Record Repayment, Repayment History) / Group / Sandbox, sliding nav indicator, **capture overlay dim & drop (no `BackdropFilter`, ~85% scrim, 0.965 page scale)**, Manual Expense to Add Expense sheet, swipe-to-delete + Undo, empty states |
+| `*_screen_test`, `pocko_main_shell_test` | Reactive UI across Home (Top Expenses, nav badge, no banners) / Expenses (date strip, `showCheckmark: false`, time metadata) / Matcher (✓ Correct, ✕ Wrong, Paid in Cash, telemetry footer) / Settle (transfer lanes, itemized breakdown, Record Repayment, Repayment History) / Group / Sandbox, sliding nav indicator, **capture overlay dim & drop (no `BackdropFilter`, ~90% scrim, 0.965 page scale)**, Manual Expense to Add Expense sheet, swipe-to-delete + Undo, empty states |
 | `pocko_bottom_sheet_and_footer_test`, `settle_graph_and_breakdown_test`, `transcript_tokens_test` | Global `showPockoBottomSheet` (80 % max height, drag handle, keyboard inset, no stray `showModalBottomSheet`), pair breakdown math, transcript tokenizer behind the inline pills |
 | `ai_expense_capture_sheet_test` | No preset chips, **Confirm** with `Icons.check_rounded` (no emoji), **Manual Expense**, 240 px hero + zoom, moving-gradient `ShaderMask`, analyzing shimmer/wave, always-visible member bar with **auto-selection** rules, inline pill editing + validation, focus switching, Logged + Undo, **320×568 phones, keyboard insets, iPad/desktop widths** |
 | `live_inference_gate_test` | Fast path: negative/timed-out probe returns at once, cached probes, call ceiling, no surfaced errors |
