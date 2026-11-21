@@ -191,7 +191,16 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
               ],
             )
           : content,
-      bottomNavigationBar: isWide ? null : _buildFloatingBottomBar(slice.badge),
+      // SafeArea: on phones with the 3-button / gesture bar (edge-to-edge) the
+      // floating bar must sit above the system navigation, never under it.
+      bottomNavigationBar: isWide
+          ? null
+          : SafeArea(
+              top: false,
+              left: false,
+              right: false,
+              child: _buildFloatingBottomBar(slice.badge),
+            ),
     );
 
     // "Dim & drop": the page scales back under a light scrim while the capture

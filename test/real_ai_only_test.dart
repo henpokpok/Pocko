@@ -409,6 +409,44 @@ void main() {
     );
 
     testWidgets(
+      'no offline speech pack: the mic stops ONCE with an explanation (it never flips on and off)',
+      (tester) async {
+        final stt = FakeSpeechEngine();
+        await pump(tester, stt: stt);
+        await tester.tap(find.byIcon(Icons.mic_rounded).last);
+        await settle(tester, 300);
+        expect(stt.listenCalls, 1);
+
+        stt.error('error_language_unavailable', permanent: true);
+        await settle(tester, 400);
+        stt.sessionEnds(); // the recognizer's own "done" must not restart it
+        await settle(tester, 800);
+
+        expect(stt.listenCalls, 1, reason: 'no restart loop');
+        expect(
+          find.byKey(const ValueKey('input_error_banner')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('English speech pack'), findsOneWidget);
+        expect(find.byIcon(Icons.mic_rounded), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'no connection for speech: banner tells you to type or go online',
+      (tester) async {
+        final stt = FakeSpeechEngine();
+        await pump(tester, stt: stt);
+        await tester.tap(find.byIcon(Icons.mic_rounded).last);
+        await settle(tester, 300);
+        stt.error('error_network', permanent: true);
+        await settle(tester, 500);
+        expect(find.textContaining('without a connection'), findsOneWidget);
+        expect(find.textContaining('type your expense'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'offline dictation: "2 200" is sent as 2200 and flagged as speech for the hints',
       (tester) async {
         final stt = FakeSpeechEngine();

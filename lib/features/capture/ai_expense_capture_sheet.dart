@@ -272,9 +272,48 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     return _speechReady!;
   }
 
+  /// Android's recognizer cannot work here (no offline English pack, or no
+  /// internet for online recognition): stop for good and say why, instead of
+  /// flipping the mic off and on.
+  void _failVoice(String message) {
+    _dictationTimer?.cancel();
+    _silenceTimer?.cancel();
+    _stopListening();
+    if (!mounted) return;
+    setState(() {
+      _mode = CaptureInputMode.type;
+      _inputError = message;
+    });
+  }
+
   void _onSpeechError(String message, bool permanent) {
     debugPrint('[STT Error]: $message');
     if (!mounted || !_isListening) return;
+    final m = message.toLowerCase();
+    if (m.contains('language_unavailable') ||
+        m.contains('language_not_supported')) {
+      _failVoice(
+        'Offline voice needs the English speech pack on this phone. Install '
+        '"English (US)" for offline speech recognition (Google app → Settings '
+        '→ Voice, or Settings → Voice input), or type your expense.',
+      );
+      return;
+    }
+    if (m.contains('network') || m.contains('server')) {
+      _failVoice(
+        'This phone cannot recognize speech without a connection (no offline '
+        'speech pack is installed). Turn off airplane mode for Gemini voice, '
+        'or type your expense.',
+      );
+      return;
+    }
+    if (m.contains('permission')) {
+      _failVoice(
+        'Microphone permission is off. Allow it in the phone settings, or type '
+        'your expense.',
+      );
+      return;
+    }
     final quiet =
         message.contains('no_match') || message.contains('speech_timeout');
     // "Heard nothing" is just a pause: keep listening until the dead-air
@@ -427,10 +466,16 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     }
     try {
       final ai = ref.read(hybridAiServiceProvider);
-      if (!await ai.canTranscribeAudio()) return false;
+      if (!await ai.canTranscribeAudio()) {
+        debugPrint('[Audio capture skipped]: offline or no AI runtime ready');
+        return false;
+      }
       final recorder = _recorder ??=
           (widget.voiceRecorderFactory?.call() ?? PlatformVoiceRecorder());
-      if (!await recorder.hasPermission()) return false;
+      if (!await recorder.hasPermission()) {
+        debugPrint('[Audio capture skipped]: no microphone permission');
+        return false;
+      }
       if (!mounted || !_isListening) return true; // cancelled meanwhile
       _detector = SilenceDetector(silence: widget.audioSilenceTimeout);
       _ampTicks = 0;

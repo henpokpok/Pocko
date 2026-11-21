@@ -712,7 +712,10 @@ void main() {
 
     test('offline dictation is pinned to English dictation mode', () {
       final engine = read('lib/services/speech/speech_engine.dart');
-      expect(engine, contains("localeId: 'en_US'"));
+      // English only, but a variant the recognizer really offers (en_US first).
+      expect(engine, contains("== 'en_us'"));
+      expect(engine, contains("startsWith('en_')"));
+      expect(engine, contains('localeId: locale'));
       expect(engine, contains('ListenMode.dictation'));
     });
 

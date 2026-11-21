@@ -26,6 +26,27 @@ abstract class SpeechEngine {
 /// `speech_to_text` (Android SpeechRecognizer, iOS SFSpeechRecognizer, Chrome).
 class PlatformSpeechEngine implements SpeechEngine {
   final stt.SpeechToText _speech = stt.SpeechToText();
+  String? _localeId;
+  bool _localeResolved = false;
+
+  /// English on purpose (a phone set to Thai would match English speech
+  /// against the wrong phonemes), but only a variant this recognizer actually
+  /// offers: `en_US`, else any `en_*`, else the system default (`null`).
+  Future<String?> _pickLocale() async {
+    if (_localeResolved) return _localeId;
+    _localeResolved = true;
+    try {
+      final locales = await _speech.locales();
+      String norm(String id) => id.replaceAll('-', '_').toLowerCase();
+      for (final l in locales) {
+        if (norm(l.localeId) == 'en_us') return _localeId = l.localeId;
+      }
+      for (final l in locales) {
+        if (norm(l.localeId).startsWith('en_')) return _localeId = l.localeId;
+      }
+    } catch (_) {}
+    return _localeId = null;
+  }
 
   @override
   Future<bool> initialize({
@@ -42,14 +63,13 @@ class PlatformSpeechEngine implements SpeechEngine {
   Future<void> listen({
     required SpeechResultCallback onResult,
     required void Function(double level) onSoundLevel,
-  }) {
+  }) async {
+    final locale = await _pickLocale();
     return _speech.listen(
       onResult: (r) => onResult(r.recognizedWords, r.finalResult),
       onSoundLevelChange: onSoundLevel,
-      // English on purpose: phones set to Thai (or any other locale) would
-      // otherwise match English speech against the wrong phonemes.
       listenOptions: stt.SpeechListenOptions(
-        localeId: 'en_US',
+        localeId: locale,
         partialResults: true,
         listenMode: stt.ListenMode.dictation,
         pauseFor: const Duration(seconds: 4),
