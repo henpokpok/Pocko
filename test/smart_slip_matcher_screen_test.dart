@@ -226,7 +226,7 @@ void main() {
   });
 
   testWidgets(
-    'Local sample: PII is masked on-device, auto-matches TeamLab and shows an (Offline Rules) footer',
+    'Local sample: PII is masked on-device, auto-matches TeamLab and shows an (Rule Engine) footer',
     (tester) async {
       final container = await pumpPocko(
         tester,
@@ -249,7 +249,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('(Offline Rules) • '),
+          matching: find.textContaining('(Rule Engine) • '),
         ),
         findsOneWidget,
         reason: 'simulated engine is labelled honestly',
@@ -282,7 +282,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('📴 (Offline Rules) • '),
+          matching: find.textContaining('📴 (Rule Engine) • '),
         ),
         findsOneWidget,
       );

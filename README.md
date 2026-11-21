@@ -2,14 +2,14 @@
 > **Log in 3 seconds offline. Match slips privately. Settle trips with zero awkward math.**  
 > *The Flagship Cross-Platform Travel Expense & Smart Bill Splitter powered by Genuine Firebase AI Logic Hybrid Inference.*
 
-> ## 🚀 Try it live: **[pocko-hybrid-ai.web.app](https://pocko-hybrid-ai.web.app)**
+> ## 🌐 Try Live Web App: **[https://pocko-hybrid-ai.web.app](https://pocko-hybrid-ai.web.app)**
 > Open it in Chrome on a phone, tablet or desktop. No sign-up: tap **Try Tokyo Demo Trip** on the landing page and you are inside a synced group trip in seconds.
 
 [![Live Web App](https://img.shields.io/badge/Live%20Web%20App-pocko--hybrid--ai.web.app-10B981?logo=googlechrome&logoColor=white&style=for-the-badge)](https://pocko-hybrid-ai.web.app)
 
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iPadOS-10B981)](#target-platforms)
+[![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iOS%20%2F%20iPadOS-10B981)](#target-platforms)
 [![Tests Passing](https://img.shields.io/badge/Tests-642%2F642%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
@@ -34,6 +34,13 @@
 Traveling with friends should create lasting memories—not endless spreadsheets, crumpled receipts, or awkward Venmo requests. **Pocko** is an offline-first travel expense tracker and automated debt simplifier engineered with a **genuine hybrid AI inference runtime**. 
 
 Whether you are deep inside the Tokyo subway with zero cell service, hiking in the Swiss Alps, or splitting a street food banquet in Bangkok, Pocko processes natural voice dictation and typed multi-expense notes **locally on-device in under 100 milliseconds** at zero cloud cost. When complex foreign receipts, currency conversion insights, or multi-line slip photos are captured, Pocko smoothly orchestrates cloud fallback to **Gemini 3.1 Flash Lite → Gemini 3.8 Flash** via Firebase AI Logic.
+
+### The 3 Hybrid AI Pillars
+1. **Privacy-First On-Device PII Shield:** card and account digits are masked on the device before any AI sees a slip; only the last four ever sync, and slips never leave the phone.
+2. **Neuro-Symbolic Deterministic Expense Engine + Audit Trail:** the LLM only extracts words; prices, multipliers, splits and totals are computed and checked in code, and every expense keeps the original prompt as an audit trail.
+3. **One Flutter Codebase Bridging 3 Native Hybrid AI Runtimes:** Chrome's built-in Gemini Nano (web), Android AICore Gemini Nano and Apple Foundation Models (iOS / iPadOS), all behind one Firebase AI Logic `PREFER_ON_DEVICE` policy, with Cloud Gemini (`gemini-3.1-flash-lite`, then `gemini-3.8-flash`) and a deterministic rule engine as the fallbacks.
+
+**App Check:** reCAPTCHA Enterprise (web) • Play Integrity (Android) • Apple DeviceCheck (iOS / iPadOS); debug providers only on developer builds and `localhost`.
 
 ### Target Platforms
 | Platform | Target Hardware / Environment | Hybrid AI Engine | Bridge Mechanism |
@@ -72,7 +79,7 @@ Pocko implements the official **`PREFER_ON_DEVICE`** hybrid paradigm. It doesn't
 | **Privacy & Security** | Data never leaves device RAM; local PII/account masking | Processed via enterprise Google Cloud security |
 | **API / Compute Cost** | **\$0.00** (Zero marginal cost for millions of inputs) | Standard low-cost Gemini Flash token pricing |
 | **Primary Tasks** | Natural language expense parsing, multi-item splitting, category tagging | Complex multi-line foreign receipts, currency conversion insights, older devices |
-| **Token Limits** | Prompt $< 4,000$ tokens; Output capped at $256 - 512$ tokens | Large context multimodal reasoning |
+| **Token Limits** | Prompt < 4,000 tokens; output capped at 256 to 512 tokens | Large context multimodal reasoning |
 
 ---
 
@@ -80,7 +87,7 @@ Pocko implements the official **`PREFER_ON_DEVICE`** hybrid paradigm. It doesn't
 
 Judges inspecting this repository can verify that **official Firebase AI Logic SDKs are genuinely imported and executed at runtime** (heuristic regex is strictly an offline safety net for unconfigured headless tests):
 
-### 1. Web Hybrid AI (`dart:js_interop` + Firebase JS SDK v11.4+)
+### 1. Web Hybrid AI (`dart:js_interop` + Firebase JS SDK 12.5.0)
 * **[`web/firebase_ai_web.js`](web/firebase_ai_web.js)**:
   - Imports from the official Firebase JS SDK **12.5.0+** (the first release with hybrid on-device inference):
     ```javascript
@@ -183,7 +190,7 @@ flowchart TD
     subgraph Bridges[Cross-Platform Hybrid AI Bridges]
         direction TB
         AndroidBridge[Android AICore Bridge<br/>com.google.firebase:firebase-ai<br/>OnDeviceConfig PREFER_ON_DEVICE]
-        AppleBridge[Apple Foundation Models Bridge<br/>FirebaseAI preferOnDevice<br/>iPadOS 26+ & iOS 18+]
+        AppleBridge[Apple Foundation Models Bridge<br/>FirebaseAI preferOnDevice<br/>iOS 18+ / iPadOS 26+]
         WebBridge[Chrome Web Interop Bridge<br/>dart:js_interop + firebase/ai<br/>InferenceMode.PREFER_ON_DEVICE]
     end
 
@@ -331,9 +338,9 @@ flutter pub get
 2. In Settings ➔ Developer Options, verify **AICore Persistent Service** is running.
 3. Native builds link directly to `com.google.firebase:firebase-ai-ondevice` (minSdk 26).
 
-#### 🍏 Enabling iPadOS 26+ / iOS 18+ (iPad Air M4)
+#### 🍏 Enabling iOS 18+ / iPadOS 26+ (iPad Air M4)
 1. In iPad Settings ➔ Apple Intelligence & Siri, verify on-device foundation models are active.
-2. Add the `FirebaseAILogic` product (firebase-ios-sdk 12.13+) via Swift Package Manager; the Swift bridge compiles with `#if canImport(FirebaseAILogic)` and otherwise reports `AI_UNAVAILABLE` so Dart can use its labelled simulation.
+2. Add the `FirebaseAILogic` product (firebase-ios-sdk 13.1.1+) via Swift Package Manager; the Swift bridge compiles with `#if canImport(FirebaseAILogic)` and otherwise reports `AI_UNAVAILABLE` so Dart can use its labelled simulation.
 
 ### 4. (Optional) Link Your Firebase Project for Web
 

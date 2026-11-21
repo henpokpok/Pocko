@@ -132,11 +132,11 @@ void main() {
       );
       expect(
         TelemetryFooter.format(InferenceSource.onDevice, 84, simulated: true),
-        '📴 (Offline Rules) • 84ms',
+        '📴 (Rule Engine) • 84ms',
       );
       expect(
         TelemetryFooter.format(InferenceSource.inCloud, 612, simulated: true),
-        '📴 (Offline Rules) • 612ms',
+        '📴 (Rule Engine) • 612ms',
       );
       expect(
         TelemetryFooter.format(InferenceSource.manual, null),

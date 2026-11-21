@@ -51,14 +51,14 @@ class TelemetryPill extends StatelessWidget {
   }
 
   String get _title {
-    if (simulated) return 'Offline';
+    if (simulated) return 'Offline Safety Net';
     if (plain) {
       if (source == InferenceSource.inCloud) return 'Cloud Gemini';
       if (source == InferenceSource.onDevice) return 'On-Device AI';
     }
     switch (source) {
       case InferenceSource.onDevice:
-        return 'On-Device';
+        return 'On-Device AI';
       case InferenceSource.inCloud:
         return 'Cloud Fallback';
       case InferenceSource.manual:
@@ -83,7 +83,7 @@ class TelemetryPill extends StatelessWidget {
         ? [
             '$_emoji $_title',
             if (simulated)
-              'Local Rules'
+              'Rule Engine'
             else if (source == InferenceSource.inCloud)
               _cloudModel
             else if (source == InferenceSource.onDevice)
@@ -92,7 +92,7 @@ class TelemetryPill extends StatelessWidget {
         : [
             '$_emoji $_title',
             if (simulated)
-              'Local Rules'
+              'Rule Engine'
             else if (source != InferenceSource.manual)
               source.engineLabel(modelInfo),
           ].join(' • ');
@@ -153,7 +153,7 @@ class TelemetryPill extends StatelessWidget {
 }
 
 /// Compact footer badge shown at the very bottom of Matcher and Expense cards:
-/// `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `📴 (Offline Rules) • 92ms` when the
+/// `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `📴 (Rule Engine) • 92ms` when the
 /// offline engine answered because no live runtime is configured.
 class TelemetryFooter extends StatelessWidget {
   final InferenceSource source;
@@ -181,7 +181,7 @@ class TelemetryFooter extends StatelessWidget {
     };
     if (source == InferenceSource.manual) return '$emoji (Manual)';
     final kind = simulated
-        ? 'Offline Rules'
+        ? 'Rule Engine'
         : (source == InferenceSource.onDevice ? 'Local' : 'Cloud');
     return latencyMs == null
         ? '$emoji ($kind)'

@@ -21,7 +21,7 @@ void main() {
           modelInfo: 'Gemini Nano (AICore)',
         ),
       );
-      expect(find.text('🟢 On-Device • Gemini Nano'), findsOneWidget);
+      expect(find.text('🟢 On-Device AI • Gemini Nano'), findsOneWidget);
       expect(find.text('92 ms'), findsOneWidget);
       expect(find.text('SIM'), findsNothing);
     });
@@ -36,7 +36,7 @@ void main() {
               'Apple Foundation Models (on-device via Firebase AI Logic)',
         ),
       );
-      expect(find.text('🟢 On-Device • Apple FM'), findsOneWidget);
+      expect(find.text('🟢 On-Device AI • Apple FM'), findsOneWidget);
 
       await pump(
         tester,
@@ -46,7 +46,7 @@ void main() {
           modelInfo: 'Gemini Nano (Chrome Prompt API, on-device)',
         ),
       );
-      expect(find.text('🟢 On-Device • Gemini Nano (Chrome)'), findsOneWidget);
+      expect(find.text('🟢 On-Device AI • Gemini Nano (Chrome)'), findsOneWidget);
     });
 
     testWidgets('Cloud pill shows Gemini Flash fallback', (tester) async {
@@ -63,7 +63,7 @@ void main() {
     });
 
     testWidgets(
-      'Offline results say Offline • Local Rules, never SIM; compact variant is short',
+      'Offline results say Offline Safety Net • Rule Engine, never SIM; compact variant is short',
       (tester) async {
         await pump(
           tester,
@@ -74,7 +74,7 @@ void main() {
           ),
         );
         expect(find.text('SIM'), findsNothing);
-        expect(find.textContaining('Offline • Local Rules'), findsOneWidget);
+        expect(find.textContaining('Offline Safety Net • Rule Engine'), findsOneWidget);
 
         await pump(
           tester,

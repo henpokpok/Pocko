@@ -511,7 +511,7 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 * **Firebase AI Logic Hybrid Runtime:**
   - **Web:** Crafted `web/firebase_ai_web.js` using `getGenerativeModel(ai, { mode: InferenceMode.PREFER_ON_DEVICE })` from the official Firebase JS SDK 12.5+, with a direct Chrome Prompt API (`LanguageModel`) path, bridged to Dart via modern `dart:js_interop`.
   - **Android:** Built a native Kotlin plugin on `com.google.firebase:firebase-ai:18.2.0` and `firebase-ai-ondevice` with `OnDeviceConfig(mode = InferenceMode.PREFER_ON_DEVICE)`.
-  - **iOS/iPadOS:** Created a native Swift plugin leveraging `FirebaseAILogic` (12.13+) with a `HybridModel` that prefers Apple Foundation Models on iPadOS 26+.
+  - **iOS / iPadOS:** Created a native Swift plugin leveraging `FirebaseAILogic` (firebase-ios-sdk 13.1.1+) with a `HybridModel` that prefers Apple Foundation Models on iPadOS 26+.
 * **Cloud Infrastructure:**
   - **Cloud Firestore:** Configured with `persistenceEnabled: true` for offline-first caching and real-time snapshot listeners.
   - **Firebase Remote Config:** Dynamically updates AI fallback models and prompt overrides over-the-air.

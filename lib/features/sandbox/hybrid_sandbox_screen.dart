@@ -634,7 +634,7 @@ class _HybridSandboxScreenState extends ConsumerState<HybridSandboxScreen> {
                       ),
                     ),
                     Text(
-                      'Skip real runtimes and use the offline heuristic engine (results are labelled Offline • Local Rules)',
+                      'Skip real runtimes and use the offline heuristic engine (results are labelled Offline Safety Net • Rule Engine)',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: AppTheme.textSlate,

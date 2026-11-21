@@ -77,7 +77,7 @@ void main() {
       await settle(tester, 800);
 
       // The test engine is the offline simulation, so the badge must say so (and never SIM).
-      expect(find.text('📴 Offline • Local Rules'), findsOneWidget);
+      expect(find.text('📴 Offline Safety Net • Rule Engine'), findsOneWidget);
       expect(find.text('SIM'), findsNothing);
       expect(find.text('¥650'), findsOneWidget);
       expect(find.text('Snacks & Cafe'), findsOneWidget);
