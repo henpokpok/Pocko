@@ -52,3 +52,7 @@ app.*.map.json
 
 # Old project archive
 /pocko_travmate_project.zip
+
+# Devpost marketing images (binary, regenerated from the running app)
+submission_assets/
+.firebase/
