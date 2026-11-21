@@ -62,7 +62,7 @@ Shown by `OnboardingGate` **only on the very first launch** (`has_seen_landing`,
 A fresh install holds a harmless placeholder (`TripState.hasTrip == false`: one member, no expenses, a valid currency), never a null trip. When there is no trip, or only a trip whose start date is in the future (`TripState.hasNoActiveTrip`), Home shows a welcoming placeholder with **Create a New Trip** and **Join Existing Group**, plus a quiet *Upcoming* card with "View trip" when one is scheduled. `ensureTrip` guards the `+` capture button, Add Expense and the Receipt / Slip upload with a "Create or join a trip first" prompt, and `addExpenses` ignores calls without a trip. (The app holds one trip at a time, so "upcoming trips" means that trip.)
 
 ### AI source indicator
-The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1480 ms`, `🟢 On-Device • Gemini Nano`, or `📴 Offline fallback • local parser`.
+The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1480 ms`, `🟢 On-Device • Gemini Nano`, or `📴 Offline Safety Net • Rule Engine` (only for slip matching; expense capture never uses it).
 
 ### 🏠 Tab 0: Home (`TripHomeScreen`)
 * **Trip Summary Hero Card:** A mint-to-sky card with an animated, tabular total (e.g. `¥56,700`), the live USD conversion (`~$378 USD`), live **Per person** and **Still owed** chips, an always-fresh date range computed from the real expense dates, and a Pocko whose mood reflects the trip (napping when empty, celebrating when everyone is square).
@@ -107,7 +107,7 @@ The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini •
   - Slip-only cards still offer *Link to expense* and *Create expense* (opens the editor, logs it already verified).
   - Every card ends with a compact telemetry badge: `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `(Sim) • 48ms` when the offline engine answered. The collapsible "N private fields masked on-device" panel shows the masked text.
   - `Batch Confirm & Split (N)` verifies every proposed pair; verified slips collapse into a history list.
-* Photos use the multimodal cloud route; when no runtime is reachable a clearly labelled (`SIM`) demonstration extraction is used. Slips are never uploaded to the group, only the matched status of the expense syncs.
+* Photos use the multimodal cloud route; when no runtime is reachable the slip is parsed by the deterministic, labelled `Offline Safety Net • Rule Engine` (PII masking is always on-device). Slips are never uploaded to the group, only the matched status of the expense syncs.
 
 ### 🍩 Tab 4: Visual Settle (`VisualSettleScreen`)
 * **Interactive Donut Chart (`fl_chart`):** category shares in the *base currency* (mixed-currency trips convert correctly); tap a slice or legend pill to focus it (center shows icon, %, amount).
@@ -143,7 +143,7 @@ sequenceDiagram
     participant Speech as Speech-To-Text (or demo dictation)
     participant Gate as LiveInferenceGate
     participant HybridAI as HybridAiService
-    participant Local as LocalExpenseParser (labelled SIM)
+    participant Banner as Failure banner (offline / timeout / rejected + Try again)
     participant Store as TripController & Firestore
 
     User->>Host: Taps Center '+'
@@ -156,10 +156,11 @@ sequenceDiagram
     Overlay->>HybridAI: parseExpenseText(text, members, currency)
     HybridAI->>Gate: probe (<= 450ms, cached 30s)
     alt Firebase AI Logic configured or on-device model ready
-        Gate->>HybridAI: call runs directly (20s ceiling)
-    else Nothing provisioned
-        Gate-->>HybridAI: null at once
-        HybridAI->>Local: instant local parse
+        Gate->>HybridAI: call runs directly (40s ceiling)
+    else Nothing answers
+        Gate-->>HybridAI: null + the last error
+        HybridAI-->>Overlay: AiUnavailableException
+        Overlay->>Banner: explains why; Try again re-sends the same words or audio
     end
     HybridAI-->>Overlay: Parsed items + honest telemetry
     Overlay->>Overlay: Inline highlighted transcript; detected members auto-selected on the strip
@@ -172,7 +173,7 @@ sequenceDiagram
 Earlier builds could wait several seconds on CDN imports, a placeholder `firebaseConfig` or a Chrome model check before falling back. Now:
 * **`LiveInferenceGate`** ([`hybrid_ai_service.dart`](../lib/services/hybrid_ai/hybrid_ai_service.dart)) time-boxes a *probe* (450 ms, result cached 30 s) and the *call* (20 s ceiling). A negative or timed-out probe returns `null` immediately, so the local parser answers with a realistic **~500 ms** visual beat.
 * **Web:** `WebHybridAiBridge.quickProbe()` first checks synchronously whether the bridge exists and whether `window.firebaseConfig` holds *real* values (placeholders such as `"..."` or `YOUR_KEY` never count); a configured project runs directly with no extra awaits. Without it, only a Chrome model that is **already downloaded** (`availability() === "available"`, probed with a 400 ms cap) is used. A model that would need a download never blocks the tap. The JS also caps Prompt API session creation (4 s), prompting (8 s) and the Firebase call (20 s).
-* **Android / iOS:** the `MethodChannel` call carries the same ceiling; configured Firebase AI Logic (Gemini Nano via AICore on Galaxy S26+/Pixel, Apple Foundation Models on M4 iPad) executes directly. Bridges still never fabricate results: `AI_UNAVAILABLE` falls back to the labelled `SIM` parser.
+* **Android / iOS:** the `MethodChannel` call carries the same ceiling; configured Firebase AI Logic (Gemini Nano via AICore on Galaxy S26+/Pixel, Apple Foundation Models on M4 iPad) executes directly. Bridges never fabricate results: `AI_UNAVAILABLE` becomes an `AiUnavailableException` and an honest banner.
 
 ### The 4 Steps
 The hero Pocko is **240 px** on standard and tall viewports and only scales down (via `AnimatedContainer`) when the keyboard opens or the viewport is genuinely short; secondary rows collapse so nothing overflows a 320×568 phone or a keyboard-covered screen. On tablets/desktop the content is centered at a readable 560 px.
@@ -474,13 +475,13 @@ Every inference path returns the same map: `{ rawJson, inferenceSource: "on_devi
 | Layer | Real runtime | When unavailable |
 |---|---|---|
 | **Web** | `web/firebase_ai_web.js`: Firebase AI Logic JS SDK 12.5+ (`getGenerativeModel(ai, { mode: InferenceMode.PREFER_ON_DEVICE, inCloudParams })`), then Chrome's W3C Prompt API (`LanguageModel`, Chrome 139+) | Promise rejects ➔ Dart simulation |
-| **Android** | `HybridAiPlugin.kt`: `OnDeviceConfig(mode = PREFER_ON_DEVICE)` via Firebase AI Logic 18.x + `firebase-ai-ondevice` | `AI_UNAVAILABLE` ➔ Dart simulation |
-| **iOS / iPadOS** | `HybridAiPlugin.swift`: `HybridModel(primary: SystemLanguageModel.default, secondary: Gemini)` (FirebaseAILogic via SPM, iOS 26+) | `AI_UNAVAILABLE` ➔ Dart simulation |
-| **Fallback** | `LocalExpenseParser` (deterministic English heuristics) | Always available (headless tests, simulators) |
+| **Android** | `HybridAiPlugin.kt`: `OnDeviceConfig(mode = PREFER_ON_DEVICE)` via Firebase AI Logic 18.x + `firebase-ai-ondevice` | `AI_UNAVAILABLE` ➔ `AiUnavailableException` + banner |
+| **iOS / iPadOS** | `HybridAiPlugin.swift`: `HybridModel(primary: SystemLanguageModel.default, secondary: Gemini)` (FirebaseAILogic via SPM, iOS 26+) | `AI_UNAVAILABLE` ➔ `AiUnavailableException` + banner |
+| **Cross-check only** | `LocalExpenseParser` (deterministic English rules) | Validates a real model's answer (`ExpenseNormalizer`); never creates an expense on its own |
 
 Principles:
 * **Native bridges never fabricate telemetry.** Earlier prototypes returned simulated JSON labelled `on_device`; now a bridge either reports what the SDK really did or errors out.
-* **Simulated results are labelled** (`SIM` tag on the pill, "SIMULATED ENGINE" in the sandbox) and can be forced from the sandbox for demos.
+* **No regex stand-in for the AI.** If neither On-Device AI nor Cloud Gemini answers, `AiUnavailableException` is raised and the capture sheet shows why (offline with no on-device model, timeout, or rejected request) with a Try again that re-sends the same audio or text.
 * **Remote Config is applied on every call:** `ai_inference_mode` (parsed in any casing; web uses the lowercase SDK values), `cloud_fallback_model`, `max_output_tokens` (clamped) and `prompt_template_override`.
 * **Privacy by design:** receipts and bank slips are PII-masked on-device first; only masked text can reach a cloud model; slips are never synced to the group.
 * The Diagnostic Sandbox's *Live Runtime Probe* calls `checkModelStatus` on the active bridge (e.g. `LanguageModel.availability()` on Chrome) and states honestly what the device can execute.
@@ -520,13 +521,13 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 
 ### 🧗 Challenges We Ran Into
 * **Unifying Three On-Device AI Runtimes:** Android uses AICore/ML Kit, iOS uses Apple Foundation Models, and Chrome uses the W3C Prompt API. We designed a clean unified `MethodChannel` and `dart:js_interop` interface returning consistent telemetry maps across all platforms: `{ rawJson, inferenceSource, latencyMs, modelInfo }`.
-* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 642 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI can label simulated results honestly.
+* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 663 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI never shows invented results.
 * **Token Budget Optimization:** Early prompt prototypes occasionally caused on-device LLMs to truncate JSON output. We engineered a compact `<200-word` prompt template that guarantees responses stay under 512 tokens while supporting chained multi-expense sentences.
 
 ### 🏆 Accomplishments We're Proud Of
 * **Fast local inference:** on supported hardware, on-device parsing typically lands in the tens of milliseconds to ~110ms with zero cloud API cost (the telemetry pill shows the real number for every request).
 * **100% Offline Resilience:** You can put your device into Airplane Mode, record multiple expenses in voice or text, and watch Pocko parse, categorize, and calculate balances seamlessly.
-* **100% Green Test Suite:** 642 unit, service, controller and widget tests (45 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
+* **100% Green Test Suite:** 663 unit, service, controller and widget tests (46 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
 * **Delightful Emotional Design:** Our animated Pocko character turns bill-splitting from a chore into a joyful travel companion.
 
 ### 📚 What We Learned

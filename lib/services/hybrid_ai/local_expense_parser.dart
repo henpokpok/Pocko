@@ -289,7 +289,7 @@ class LocalExpenseParser {
   // ---------------------------------------------------------------------------
 
   static final RegExp _percent = RegExp(
-    r'(plus|\+|incl\.?|including|add|and|with)?\s*(\d+(?:\.\d+)?)\s*%\s*(service charge|service|tip|tax|vat|surcharge|fee|gratuity|charge)?',
+    r'(plus|\+|incl\.?|including|add|and|with)?\s*(\d+(?:\.\d+)?)\s*(?:%|per\s?cent|percent|pct)\s*(service charge|service|tip|tax|vat|surcharge|fee|gratuity|charge)?',
     caseSensitive: false,
   );
 
@@ -533,7 +533,7 @@ class LocalExpenseParser {
       final after = seg.substring(m.end);
       final before = seg.substring(0, m.start);
       if (RegExp(
-        r'^\s*(ways?|people|persons?|pax|guests?|nights?|days?|x\b|%|hrs?\b|hours?)',
+        r'^\s*(ways?|people|persons?|pax|guests?|nights?|days?|x\b|%|per\s?cent|percent|pct|hrs?\b|hours?)',
         caseSensitive: false,
       ).hasMatch(after)) {
         continue;

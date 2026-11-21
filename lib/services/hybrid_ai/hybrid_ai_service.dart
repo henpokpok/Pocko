@@ -11,6 +11,7 @@ import '../../core/enums/inference_source.dart';
 import '../../core/enums/slip_status.dart';
 import '../../models/expense_item.dart';
 import '../remote_config/remote_config_service.dart';
+import 'ai_unavailable.dart';
 import 'expense_normalizer.dart';
 import 'expense_prompt_builder.dart';
 import 'local_expense_parser.dart';
@@ -40,9 +41,13 @@ class LiveInferenceGate {
   bool? _cachedReady;
   DateTime? _cachedAt;
 
+  /// The last error that made a live call return `null` (for honest messages).
+  String? lastError;
+
   LiveInferenceGate({
     this.probeTimeout = const Duration(milliseconds: 450),
-    this.callTimeout = const Duration(seconds: 20),
+    // The native chain can spend ~8 s on-device + 2 x 10 s cloud attempts.
+    this.callTimeout = const Duration(seconds: 40),
     this.cacheFor = const Duration(seconds: 30),
   });
 
@@ -67,11 +72,17 @@ class LiveInferenceGate {
   Future<T?> run<T>({
     required Future<bool> Function() probe,
     required Future<T?> Function() call,
+    Duration? timeout,
   }) async {
-    if (!await _ready(probe)) return null;
+    lastError = null;
+    if (!await _ready(probe)) {
+      lastError = 'No Firebase AI runtime is ready in this browser';
+      return null;
+    }
     try {
-      return await call().timeout(callTimeout);
+      return await call().timeout(timeout ?? callTimeout);
     } catch (e) {
+      lastError = e.toString();
       debugPrint('[LiveInferenceGate] live call failed or timed out: $e');
       // Re-probe next time instead of trusting a runtime that just failed.
       _cachedAt = null;
@@ -392,7 +403,9 @@ class HybridAiService {
     'com.hybridtrip.ai/inference',
   );
 
-  /// Forces the offline heuristic engine (headless tests, UI development).
+  /// Test seam only: swaps every real runtime for the deterministic
+  /// [LocalExpenseParser]. Production code never sets it, and without it an
+  /// expense that no real model can read raises [AiUnavailableException].
   bool isMockEnabled;
 
   /// Adds a realistic 70–130 ms (on-device) / 450–700 ms (cloud) delay to the
@@ -403,6 +416,9 @@ class HybridAiService {
 
   /// Time-boxes the "is a real runtime reachable?" probe and the live call.
   final LiveInferenceGate _gate;
+
+  /// The last native error (PlatformException / timeout) for honest messages.
+  String? _nativeError;
 
   HybridAiService({
     this.isMockEnabled = false,
@@ -472,11 +488,13 @@ class HybridAiService {
     List<String> memberNames = const ['You', 'Alex', 'Maya', 'Liam'],
     String defaultPayer = 'You',
     bool hasReceipt = false,
+    bool fromSpeech = false,
   }) async {
     final p = policy;
     final effectiveMode = mode ?? p.mode;
     final prompt = ExpensePromptBuilder.buildPrompt(
       userInput: text,
+      fromSpeech: fromSpeech,
       tripCurrency: tripCurrency,
       memberNames: memberNames,
       defaultPayer: defaultPayer,
@@ -500,6 +518,7 @@ class HybridAiService {
       );
     }
 
+    if (!isMockEnabled) throw await _unavailable();
     return _simulateExpenseInference(
       rawText: text,
       mode: effectiveMode,
@@ -507,6 +526,16 @@ class HybridAiService {
       memberNames: memberNames,
       defaultPayer: defaultPayer,
       hasReceipt: hasReceipt,
+    );
+  }
+
+  /// Builds the honest "no real model answered" error: offline vs. timeout vs.
+  /// rejected, with the runtime's own last error as detail.
+  Future<AiUnavailableException> _unavailable() async {
+    final online = await NetworkProbe.check();
+    return AiUnavailableException.fromError(
+      _gate.lastError ?? _nativeError,
+      online: online,
     );
   }
 
@@ -559,9 +588,9 @@ class HybridAiService {
   /// Sends one **uninterrupted voice recording** to Gemini (`gemini-3.1-flash-lite`,
   /// fallback `gemini-3.8-flash`) as inline audio together with the trip context
   /// and returns the verbatim [HybridAiResult.transcript] plus the parsed items
-  /// in a single call. Returns `null` when no live runtime answered (the caller
-  /// falls back to typing / offline dictation).
-  Future<HybridAiResult?> parseExpenseAudio({
+  /// in a single call. Throws [AiUnavailableException] when no live runtime
+  /// answered (the caller shows why and offers to retry the same recording).
+  Future<HybridAiResult> parseExpenseAudio({
     required String audioBase64,
     String audioMimeType = 'audio/mp4',
     String tripCurrency = 'JPY',
@@ -585,11 +614,12 @@ class HybridAiService {
       maxOutputTokens: policy.maxOutputTokens < 1024
           ? 1024
           : policy.maxOutputTokens,
+      timeout: const Duration(seconds: 55),
     );
     debugPrint(
       '[HybridAiService] audio analysis ${live == null ? 'unavailable' : 'in ${live.latencyMs} ms via ${live.modelInfo}'}',
     );
-    if (live == null) return null;
+    if (live == null) throw await _unavailable();
     return normalizeAudioResult(
       live,
       tripCurrency: tripCurrency,
@@ -756,8 +786,10 @@ class HybridAiService {
     String? audioBase64,
     String? audioMimeType,
     int? maxOutputTokens,
+    Duration? timeout,
   }) async {
     if (isMockEnabled) return null;
+    _nativeError = null;
 
     if (kIsWeb) {
       // Fast path: no bridge / no real config / no downloaded model -> null at once.
@@ -775,6 +807,7 @@ class HybridAiService {
           );
           return HybridAiResult.fromMap(webResult, hasReceipt: hasReceipt);
         },
+        timeout: timeout,
       );
     }
 
@@ -791,21 +824,22 @@ class HybridAiService {
             'audioBase64': ?audioBase64,
             'audioMimeType': ?audioMimeType,
           })
-          .timeout(_gate.callTimeout);
+          .timeout(timeout ?? _gate.callTimeout);
       if (result != null) {
         return HybridAiResult.fromMap(result, hasReceipt: hasReceipt);
       }
     } on TimeoutException {
-      debugPrint(
-        '[HybridAiService] Native runtime timed out; using local parser.',
-      );
+      _nativeError = 'timeout: the native AI runtime did not answer in time';
+      debugPrint('[HybridAiService] Native runtime timed out.');
     } on MissingPluginException {
-      // Headless tests / unsupported desktop targets.
+      _nativeError = 'native AI bridge is not available on this platform';
     } on PlatformException catch (e) {
+      _nativeError = '${e.code}: ${e.message}';
       debugPrint(
         '[HybridAiService] Native runtime unavailable (${e.code}): ${e.message}',
       );
     } catch (e) {
+      _nativeError = '$e';
       debugPrint('[HybridAiService] Native MethodChannel error: $e');
     }
     return null;

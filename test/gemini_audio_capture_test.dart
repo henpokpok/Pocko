@@ -11,6 +11,7 @@ import 'package:travmate/features/capture/ai_expense_capture_sheet.dart';
 import 'package:travmate/features/trip/trip_controller.dart';
 import 'package:travmate/models/raw_prompt_note.dart';
 import 'package:travmate/services/hybrid_ai/expense_prompt_builder.dart';
+import 'package:travmate/services/hybrid_ai/ai_unavailable.dart';
 import 'package:travmate/services/hybrid_ai/hybrid_ai_service.dart';
 import 'package:travmate/services/network/network_probe.dart';
 import 'package:travmate/services/speech/voice_recorder.dart';
@@ -82,7 +83,7 @@ class FakeAudioAi extends HybridAiService {
   }
 
   @override
-  Future<HybridAiResult?> parseExpenseAudio({
+  Future<HybridAiResult> parseExpenseAudio({
     required String audioBase64,
     String audioMimeType = 'audio/mp4',
     String tripCurrency = 'JPY',
@@ -94,7 +95,14 @@ class FakeAudioAi extends HybridAiService {
     lastBytes = base64Decode(audioBase64).length;
     lastMembers = memberNames;
     await Future<void>.delayed(replyDelay);
-    return reply;
+    final r = reply;
+    if (r == null) {
+      throw const AiUnavailableException(
+        AiFailureKind.timeout,
+        detail: 'timeout: scripted',
+      );
+    }
+    return r;
   }
 }
 
@@ -161,12 +169,15 @@ Future<void> _pump(
   FakeAudioAi ai,
   FakeRecorder rec, {
   FakeSpeechEngine? stt,
+  // The shipping default is 6 s; most timing tests use 3.5 s to stay short.
+  Duration audioSilence = const Duration(milliseconds: 3500),
 }) async {
   await pumpPocko(
     tester,
     AiExpenseCaptureSheet(
       voiceRecorderFactory: () => rec,
       speechEngineFactory: stt == null ? null : () => stt,
+      audioSilenceTimeout: audioSilence,
     ),
     size: const Size(390, 1100),
     ai: ai,
@@ -555,7 +566,7 @@ void main() {
     });
 
     testWidgets(
-      'when Gemini cannot be reached the next mic tap dictates offline',
+      'when Gemini fails online: a red banner with the reason, and Try again re-sends the SAME recording (no STT downgrade)',
       (tester) async {
         final ai = FakeAudioAi(reply: null);
         final rec = FakeRecorder();
@@ -564,13 +575,42 @@ void main() {
         await _tapMic(tester);
         await _speakThenSilence(tester, rec);
         await settle(tester, 1500);
-        expect(find.textContaining('Could not reach Gemini'), findsOneWidget);
-        expect(stt.listenCalls, 0);
+        expect(find.byKey(const ValueKey('ai_failure_banner')), findsOneWidget);
+        expect(find.textContaining('did not answer in time'), findsOneWidget);
+        expect(find.textContaining('timeout: scripted'), findsOneWidget);
+        expect(stt.listenCalls, 0, reason: 'online never downgrades to STT');
+        expect(ai.audioCalls, 1);
 
-        await _tapMic(tester);
+        // Connection is back: the same clip is analyzed, nobody speaks again.
+        ai.reply = _audioReply();
+        await tester.tap(find.byKey(const ValueKey('retry_ai_button')));
+        await settle(tester, 1800);
+        expect(ai.audioCalls, 2);
+        expect(ai.lastBytes, 4000);
         expect(rec.starts, 1, reason: 'no second recording');
-        expect(stt.listenCalls, 1, reason: 'offline dictation took over');
-        await settle(tester, 4500);
+        expect(stt.listenCalls, 0);
+        expect(find.byKey(const ValueKey('step_review')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'the default dead-air timeout is 6 s: a 5 s thinking pause never ends the clip',
+      (tester) async {
+        final ai = FakeAudioAi(reply: _audioReply());
+        final rec = FakeRecorder();
+        await _pump(tester, ai, rec, audioSilence: const Duration(seconds: 6));
+        await _tapMic(tester);
+        await _ticks(tester, rec, -52, 6);
+        await _ticks(tester, rec, -18, 8);
+        await _ticks(tester, rec, -52, 50); // 5 s thinking pause
+        expect(rec.stops, 0);
+        await _ticks(tester, rec, -18, 8); // keeps talking: still one clip
+        expect(rec.stops, 0);
+        expect(rec.starts, 1);
+        await _ticks(tester, rec, -52, 62); // finally 6 s of silence
+        await settle(tester, 1500);
+        expect(rec.stops, 1);
+        expect(ai.audioCalls, 1);
       },
     );
   });

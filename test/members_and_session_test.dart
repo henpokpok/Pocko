@@ -82,6 +82,7 @@ class _SpyAi extends HybridAiService {
     List<String> memberNames = const ['You', 'Alex', 'Maya', 'Liam'],
     String defaultPayer = 'You',
     bool hasReceipt = false,
+    bool fromSpeech = false,
   }) {
     seenNames.add(List.of(memberNames));
     seenPayers.add(defaultPayer);

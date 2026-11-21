@@ -21,7 +21,9 @@ import '../../core/widgets/telemetry_pill.dart';
 import '../../models/expense_item.dart';
 import '../../models/raw_prompt_note.dart';
 import '../../services/hybrid_ai/parsed_expense_draft.dart';
+import '../../services/hybrid_ai/ai_unavailable.dart';
 import '../../services/hybrid_ai/hybrid_ai_service.dart';
+import '../../services/hybrid_ai/spoken_numbers.dart';
 import '../trip/trip_controller.dart';
 import 'expense_preview_card.dart';
 import 'logged_celebration.dart';
@@ -54,8 +56,13 @@ class AiExpenseCaptureSheet extends ConsumerStatefulWidget {
   /// dictation (headless tests, kiosk demos).
   final bool enableSpeechRecognition;
 
-  /// Silence after the last spoken word that triggers the analysis.
+  /// Silence after the last spoken word that triggers the analysis (offline
+  /// dictation).
   final Duration silenceTimeout;
+
+  /// Dead air that ends a **recording** for Gemini. Long on purpose: a 2 to 5
+  /// second thinking pause never ends (or resets) the one continuous clip.
+  final Duration audioSilenceTimeout;
 
   /// Called when the overlay wants to go away (close button, after "Logged").
   /// Defaults to popping the current route when the sheet is shown standalone.
@@ -84,6 +91,7 @@ class AiExpenseCaptureSheet extends ConsumerStatefulWidget {
     this.voiceRecorderFactory,
     this.enableSpeechRecognition = true,
     this.silenceTimeout = const Duration(milliseconds: 3500),
+    this.audioSilenceTimeout = const Duration(seconds: 6),
     this.onClose,
     this.onManualExpense,
   });
@@ -132,8 +140,15 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
   bool _audioActive = false;
   bool _processingAudio = false;
 
-  /// After a failed audio call the next mic tap uses offline dictation.
-  bool _preferOffline = false;
+  /// The recording that just failed to reach Gemini, kept so "Try again"
+  /// re-sends the same audio instead of asking the user to speak again.
+  RecordedAudio? _pendingAudio;
+
+  /// Why the last analysis failed (drives the pinned red banner).
+  AiUnavailableException? _aiFailure;
+
+  /// Whether the text being analyzed came from offline dictation.
+  bool _textFromSpeech = false;
   SilenceDetector _detector = SilenceDetector();
   int _ampTicks = 0;
   Timer? _maxRecordTimer;
@@ -337,6 +352,8 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     _dictation.clear();
     setState(() {
       _inputError = null;
+      _aiFailure = null;
+      _pendingAudio = null;
       _setTranscript('');
     });
     if (_isListening) _armSilenceTimer();
@@ -377,8 +394,22 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
         _armSilenceTimer();
         return;
       } catch (e) {
-        debugPrint('[STT Listen → demo dictation]: $e');
+        debugPrint('[STT Listen failed]: $e');
       }
+    }
+    if (widget.enableSpeechRecognition) {
+      // A real device without a working recognizer: say so honestly instead of
+      // typing a made-up sentence.
+      _stopListening();
+      if (mounted) {
+        setState(() {
+          _mode = CaptureInputMode.type;
+          _inputError =
+              'Voice input is not available on this device right now. Type '
+              'what you spent instead.';
+        });
+      }
+      return;
     }
     _startDemoDictation();
   }
@@ -391,9 +422,7 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
   /// (live runtime + online + microphone permission). Returns `false` to fall
   /// back to offline `speech_to_text` dictation.
   Future<bool> _tryStartAudio() async {
-    if (_preferOffline ||
-        !widget.enableSpeechRecognition ||
-        !widget.enableAudioCapture) {
+    if (!widget.enableSpeechRecognition || !widget.enableAudioCapture) {
       return false;
     }
     try {
@@ -403,7 +432,7 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
           (widget.voiceRecorderFactory?.call() ?? PlatformVoiceRecorder());
       if (!await recorder.hasPermission()) return false;
       if (!mounted || !_isListening) return true; // cancelled meanwhile
-      _detector = SilenceDetector(silence: widget.silenceTimeout);
+      _detector = SilenceDetector(silence: widget.audioSilenceTimeout);
       _ampTicks = 0;
       _audioActive = true;
       await recorder.start(onAmplitude: _onAmplitude);
@@ -467,12 +496,19 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     }
 
     final recorded = audio;
+    _pendingAudio = recorded;
+    await _runAudio(recorded);
+  }
+
+  /// Sends one recording to Gemini (transcribe + parse in one call). Used for
+  /// the first attempt and for "Try again" with the very same audio.
+  Future<void> _runAudio(RecordedAudio recorded) async {
     final state = ref.read(tripControllerProvider);
-    final self =
-        state.memberById(state.currentMemberId) ?? state.trip.members.first;
     await _analyze(
       audioParse: () async {
         final ai = ref.read(hybridAiServiceProvider);
+        final self =
+            state.memberById(state.currentMemberId) ?? state.trip.members.first;
         final b64 = base64Encode(recorded.bytes);
         final names = state.trip.members.map((m) => m.name).toList();
         final token = _runToken;
@@ -515,14 +551,19 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
             await Future<void>.delayed(_previewHold - since);
           }
         }
-        if (result == null) {
-          // No live answer (lost connection mid-way): offline next time.
-          _preferOffline = true;
-          throw const _AudioUnavailable();
-        }
         return result;
       },
     );
+  }
+
+  /// "Try again" on the failure banner: same recording or same text.
+  void _retryAnalysis() {
+    final audio = _pendingAudio;
+    if (audio != null) {
+      _runAudio(audio);
+    } else {
+      _analyze(fromSpeech: _textFromSpeech);
+    }
   }
 
   /// Restarts the "natural pause" timer: when no new word arrives for
@@ -542,7 +583,7 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     }
     final hasText = _text.text.trim().isNotEmpty;
     _stopListening();
-    if (hasText && _step == CaptureStep.input) _analyze();
+    if (hasText && _step == CaptureStep.input) _analyze(fromSpeech: true);
   }
 
   void _stopListening() {
@@ -632,7 +673,10 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     ];
   }
 
-  Future<void> _analyze({Future<HybridAiResult> Function()? audioParse}) async {
+  Future<void> _analyze({
+    Future<HybridAiResult> Function()? audioParse,
+    bool fromSpeech = false,
+  }) async {
     final fromAudio = audioParse != null;
     var text = _text.text.trim();
     if (!fromAudio && text.isEmpty) {
@@ -645,10 +689,22 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     if (_isListening) _stopListening();
     _focus.unfocus();
 
+    // Dictation hears "2,200" as "2 200": one number, before any model sees it.
+    if (!fromAudio) {
+      final collapsed = SpokenNumbers.collapseSpacedThousands(text);
+      if (collapsed != text) {
+        text = collapsed;
+        _dictation.syncManual(text);
+        _setTranscript(text);
+      }
+      _textFromSpeech = fromSpeech;
+    }
+
     final token = ++_runToken;
     setState(() {
       _step = CaptureStep.processing;
       _inputError = null;
+      _aiFailure = null;
       _processingAudio = fromAudio;
     });
 
@@ -667,7 +723,9 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
                   tripCurrency: state.trip.baseCurrency,
                   memberNames: state.trip.members.map((m) => m.name).toList(),
                   defaultPayer: self.name,
+                  fromSpeech: fromSpeech,
                 );
+      _pendingAudio = null;
       if (fromAudio) {
         // Gemini's verbatim transcript is the text the user "said": it fills
         // the capture view (word / price / member highlighting) and becomes
@@ -752,11 +810,14 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
         _editing = null;
         _step = CaptureStep.review;
       });
-    } on _AudioUnavailable {
+    } on AiUnavailableException catch (e) {
+      // No real model answered: say so, with the reason. No regex fallback.
+      debugPrint('[AI unavailable]: $e');
+      _revealTimer?.cancel();
       if (mounted && token == _runToken) {
         setState(() {
           _step = CaptureStep.input;
-          _inputError = 'Could not reach Gemini. Tap the mic to dictate offline, or type it.';
+          _aiFailure = e;
         });
       }
     } catch (e) {
@@ -1054,9 +1115,14 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
             : avail >= 560
             ? 140.0
             : 100.0;
+        // With a failure banner on screen Pocko makes room so the banner and
+        // the Clear pill never need scrolling.
+        final showingError =
+            _step == CaptureStep.input &&
+            (_aiFailure != null || _inputError != null);
         final heroSize = _step == CaptureStep.review
             ? math.min(baseHero, keyboardOpen ? 56.0 : 120.0)
-            : baseHero;
+            : (showingError ? math.min(baseHero, 110.0) : baseHero);
         final showModes = avail >= 600 && _step == CaptureStep.input;
         final showManual =
             _step == CaptureStep.input && !keyboardOpen && avail >= 540;
@@ -1358,8 +1424,12 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
       textInputAction: TextInputAction.done,
       onSubmitted: (_) => _analyze(),
       onChanged: (_) {
-        if (_inputError != null) {
-          setState(() => _inputError = null);
+        if (_inputError != null || _aiFailure != null) {
+          setState(() {
+            _inputError = null;
+            _aiFailure = null;
+            _pendingAudio = null;
+          });
         } else {
           setState(() {});
         }
@@ -1448,46 +1518,127 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
           key: const ValueKey('input_area'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    glowField,
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 160),
-                      child: hasText
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 10),
-                              child: _clearChip(),
-                            )
-                          : const SizedBox(width: double.infinity),
-                    ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 200),
-                      child: _inputError == null
-                          ? const SizedBox(width: double.infinity)
-                          : Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Text(
-                                _inputError!,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFFFA39B),
-                                ),
-                              ),
-                            ),
-                    ),
-                  ],
+            // The transcript scrolls inside whatever room is left; the Clear
+            // pill and the red banner below it are pinned and never leave the
+            // visible area, however long the sentence gets.
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    key: const ValueKey('transcript_scroll'),
+                    reverse: true,
+                    physics: const BouncingScrollPhysics(),
+                    child: glowField,
+                  ),
                 ),
-              ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 160),
+                  child: hasText
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: _clearChip(),
+                        )
+                      : const SizedBox(width: double.infinity),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  child: (_aiFailure == null && _inputError == null)
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _errorBanner(),
+                        ),
+                ),
+              ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// Red banner pinned under the transcript: why capture failed, and (for AI
+  /// failures) a one-tap "Try again" that re-sends the same words or audio.
+  Widget _errorBanner() {
+    final failure = _aiFailure;
+    final message = failure?.userMessage ?? _inputError ?? '';
+    return Container(
+      key: ValueKey(
+        failure != null ? 'ai_failure_banner' : 'input_error_banner',
+      ),
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 520),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF7F1D1D).withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: Icon(
+              Icons.error_outline_rounded,
+              size: 18,
+              color: Color(0xFFFECACA),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    height: 1.3,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                if (failure?.detail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      failure!.detail!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10.5,
+                        color: Colors.white.withValues(alpha: 0.65),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (failure != null && failure.kind != AiFailureKind.offline) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              key: const ValueKey('retry_ai_button'),
+              onPressed: _retryAnalysis,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                minimumSize: const Size(0, 34),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                'Try again',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -1938,7 +2089,10 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
         : _pillTints[item % _pillTints.length];
     return GestureDetector(
       key: key,
-      onTap: () => _startEdit(item, isAmount: isAmount),
+      // First tap only selects the item (preview + split pills follow, no
+      // keyboard); a second tap on the selected item opens inline editing.
+      onTap: () =>
+          focused ? _startEdit(item, isAmount: isAmount) : _focusItem(item),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
@@ -1988,27 +2142,57 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
     final e = _items[item];
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: Center(
-        child: PockoSelector<ExpenseCategory>(
-          key: ValueKey('cat_badge_$item'),
-          tooltip: 'Change category',
-          label: e.category.displayName,
-          leadingIcon: e.category.icon,
-          leadingColor: e.category.pastelColor,
-          selected: e.category,
-          onOpened: () => _focusItem(item),
-          onSelected: (c) => _setCategory(item, c),
-          entries: [
-            for (final c in ExpenseCategory.values)
-              PockoMenuEntry<ExpenseCategory>(
-                value: c,
-                label: c.displayName,
-                icon: c.icon,
-                accent: c.accentColor,
-                pastel: c.pastelColor.withValues(alpha: 0.6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          PockoSelector<ExpenseCategory>(
+            key: ValueKey('cat_badge_$item'),
+            tooltip: 'Change category',
+            label: e.category.displayName,
+            leadingIcon: e.category.icon,
+            leadingColor: e.category.pastelColor,
+            selected: e.category,
+            onOpened: () => _focusItem(item),
+            onSelected: (c) => _setCategory(item, c),
+            entries: [
+              for (final c in ExpenseCategory.values)
+                PockoMenuEntry<ExpenseCategory>(
+                  value: c,
+                  label: c.displayName,
+                  icon: c.icon,
+                  accent: c.accentColor,
+                  pastel: c.pastelColor.withValues(alpha: 0.6),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+          // Explicit edit affordance: opens inline editing (and the keyboard)
+          // only when asked, never from a plain selection tap.
+          Tooltip(
+            message: 'Edit name',
+            child: InkResponse(
+              key: ValueKey('edit_item_$item'),
+              onTap: () => _startEdit(item, isAmount: false),
+              radius: 24,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.edit_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2550,9 +2734,4 @@ class _AnalyzingText extends StatelessWidget {
       },
     );
   }
-}
-
-/// Gemini could not be reached for a recorded clip.
-class _AudioUnavailable implements Exception {
-  const _AudioUnavailable();
 }

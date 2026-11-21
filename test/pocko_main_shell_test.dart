@@ -258,7 +258,8 @@ void main() {
                     id: 'dup',
                     title: 'Late-night yakitori',
                     amount: 3300,
-                    createdAt: DateTime.now(),
+                    // Newer than every demo expense, whatever the clock says.
+                    createdAt: DateTime.now().add(const Duration(days: 1)),
                   ),
                 )
                 .toList(),

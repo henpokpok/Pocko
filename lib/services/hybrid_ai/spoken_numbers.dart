@@ -237,4 +237,63 @@ class SpokenNumbers {
     buf.write(text.substring(pos));
     return buf.toString();
   }
+
+  /// Android dictation often hears "2,200" as "2 200". A digit group of 1-3
+  /// digits followed by one or more spaced 3-digit groups is one number:
+  /// `"2 200 yen"` becomes `"2200 yen"`, `"10 000"` becomes `"10000"`.
+  static String collapseSpacedThousands(String text) {
+    return text.replaceAllMapped(
+      RegExp(r'(?<![\d.,])(\d{1,3})((?:[  ]\d{3})+)(?!\d)'),
+      (m) => '${m.group(1)}${m.group(2)!.replaceAll(RegExp(r'[  ]'), '')}',
+    );
+  }
+}
+
+/// Spoken self-corrections: `"ramen 4,200 yen... oh wait no, 4,800 yen"` means
+/// 4,800. The number before the correction marker is dropped so neither the
+/// model nor the deterministic cross-check can pick the corrected-away value.
+class SpokenCorrections {
+  SpokenCorrections._();
+
+  static final RegExp _marker = RegExp(
+    r'\b(?:oh\s+)?(?:wait|sorry|actually|rather|scratch\s+that|make\s+that|i\s+mean|correction|no\s+no)\b[\s,.…-]*(?:no\b[\s,.…-]*)?',
+    caseSensitive: false,
+  );
+
+  static final RegExp _unitAfter = RegExp(
+    r'^[\s,.…]*(?:yen|jpy|baht|thb|dollars?|bucks|usd|won|krw|euros?|eur|pounds?|gbp|percent|per\s?cent|%)?',
+    caseSensitive: false,
+  );
+
+  static String resolve(String text) {
+    var current = text;
+    // A few corrections in one sentence are rare, but handle a chain.
+    for (var i = 0; i < 4; i++) {
+      final matches = _marker.allMatches(current).toList();
+      var changed = false;
+      for (final m in matches.reversed) {
+        final before = current.substring(0, m.start);
+        final after = current.substring(m.end);
+        if (SpokenNumbers.scan(after).isEmpty) continue;
+        final spans = SpokenNumbers.scan(before);
+        if (spans.isEmpty) continue;
+        final last = spans.last;
+        final unit = _unitAfter.firstMatch(before.substring(last.end));
+        final cutEnd = last.end + (unit?.end ?? 0);
+        final kept = before.substring(0, last.start).trimRight();
+        final tail = before
+            .substring(cutEnd)
+            .replaceAll(RegExp(r'^[\s,.…-]+|[\s,.…-]+$'), '');
+        current = [
+          kept,
+          tail,
+          after.trimLeft(),
+        ].where((p) => p.isNotEmpty).join(' ');
+        changed = true;
+        break;
+      }
+      if (!changed) break;
+    }
+    return current;
+  }
 }

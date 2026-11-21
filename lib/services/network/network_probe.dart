@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 /// "Can this device reach Google right now?" Used to choose between the
-/// Gemini audio pipeline (online) and offline dictation (Airplane Mode).
+/// Gemini audio pipeline (online) and offline dictation (Airplane Mode), and
+/// to tell "offline" from "Gemini did not answer" in error messages.
 class NetworkProbe {
   NetworkProbe._();
 
@@ -13,13 +14,15 @@ class NetworkProbe {
 
   static Future<bool> _lookup() async {
     if (kIsWeb) return true; // the browser's own errors surface on the call
-    try {
-      final hosts = await InternetAddress.lookup(
-        'firebasevertexai.googleapis.com',
-      ).timeout(const Duration(milliseconds: 1500));
-      return hosts.isNotEmpty && hosts.first.rawAddress.isNotEmpty;
-    } catch (_) {
-      return false;
+    // A slow mobile DNS answer must not look like "offline": two tries.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        final hosts = await InternetAddress.lookup(
+          'firebasevertexai.googleapis.com',
+        ).timeout(const Duration(seconds: 3));
+        if (hosts.isNotEmpty && hosts.first.rawAddress.isNotEmpty) return true;
+      } catch (_) {}
     }
+    return false;
   }
 }

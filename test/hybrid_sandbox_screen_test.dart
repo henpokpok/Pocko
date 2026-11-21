@@ -95,25 +95,21 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Force-simulated switch and mode selector are interactive without overflow',
-    (tester) async {
-      await pumpPocko(
-        tester,
-        const HybridSandboxScreen(),
-        scaffold: false,
-        size: const Size(360, 3200),
-      );
-      await tester.ensureVisible(find.text('Local Only'));
-      await tester.tap(find.text('Local Only'));
-      await tester.pump();
-      expect(
-        find.textContaining('Override: Strictly On-Device Only'),
-        findsOneWidget,
-      );
-      await tester.tap(find.byType(Switch).first);
-      await settle(tester, 400);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('Mode selector is interactive without overflow', (tester) async {
+    await pumpPocko(
+      tester,
+      const HybridSandboxScreen(),
+      scaffold: false,
+      size: const Size(360, 3200),
+    );
+    await tester.ensureVisible(find.text('Local Only'));
+    await tester.tap(find.text('Local Only'));
+    await tester.pump();
+    expect(
+      find.textContaining('Override: Strictly On-Device Only'),
+      findsOneWidget,
+    );
+    await settle(tester, 400);
+    expect(tester.takeException(), isNull);
+  });
 }

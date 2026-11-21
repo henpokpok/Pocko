@@ -501,6 +501,10 @@ void main() {
       final container = await _pump(tester, size: const Size(390, 1000));
       await _toReview(tester);
 
+      // First tap only selects item 2 (no keyboard); the second opens editing.
+      await tester.tap(find.byKey(const ValueKey('pill_amount_1')));
+      await settle(tester, 400);
+      expect(find.byKey(const ValueKey('inline_edit_field')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('pill_amount_1')));
       await settle(tester, 800);
       await tester.enterText(

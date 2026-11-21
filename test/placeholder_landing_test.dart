@@ -438,7 +438,10 @@ void main() {
         await tester.pumpWidget(pill(InferenceSource.onDevice));
         expect(find.text('🟢 On-Device AI • Gemini Nano'), findsOneWidget);
         await tester.pumpWidget(pill(InferenceSource.onDevice, sim: true));
-        expect(find.text('📴 Offline Safety Net • Rule Engine'), findsOneWidget);
+        expect(
+          find.text('📴 Offline Safety Net • Rule Engine'),
+          findsOneWidget,
+        );
         expect(find.text('SIM'), findsNothing);
       },
     );
@@ -454,7 +457,10 @@ void main() {
       await tester.tap(_k('confirm_button'));
       await settle(tester, 1500);
       expect(_k('ai_source_badge'), findsOneWidget);
-      expect(find.textContaining('Offline Safety Net • Rule Engine'), findsOneWidget);
+      expect(
+        find.textContaining('Offline Safety Net • Rule Engine'),
+        findsOneWidget,
+      );
       expect(find.textContaining('SIM'), findsNothing);
     });
   });

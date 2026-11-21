@@ -3,7 +3,7 @@ import 'package:travmate/services/hybrid_ai/expense_prompt_builder.dart';
 
 void main() {
   group('ExpensePromptBuilder Tests', () {
-    test('Builds a compact prompt (category anchors + rules, < 480 words)', () {
+    test('Builds a compact prompt (category anchors + rules, < 560 words)', () {
       final prompt = ExpensePromptBuilder.buildPrompt(
         userInput: 'Grilled pork 1500 Boss paid, split May and Kong',
         tripCurrency: 'THB',
@@ -12,8 +12,8 @@ void main() {
       );
 
       final wordCount = prompt.split(RegExp(r'\s+')).length;
-      // ~430 words is ~700 tokens: comfortably inside Gemini Nano's window.
-      expect(wordCount, lessThan(480));
+      // ~500 words is ~800 tokens: comfortably inside Gemini Nano's window.
+      expect(wordCount, lessThan(560));
       expect(prompt.contains('MEAL'), isTrue);
       expect(prompt.contains('Boss, May, Kong'), isTrue);
       expect(

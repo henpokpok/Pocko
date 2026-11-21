@@ -18,11 +18,18 @@ class ExpensePromptBuilder {
     List<String> memberNames = const ['You', 'Alex', 'Maya', 'Liam'],
     String defaultPayer = 'You',
     String templateOverride = '',
+    bool fromSpeech = false,
   }) {
     final categoriesStr = ExpenseCategory.values.map((c) => c.name).join(', ');
     final membersStr = memberNames.join(', ');
-    // Spoken / typo'd multipliers become plain digits before any model sees them.
-    final normalizedInput = SpokenNumbers.normalize(userInput);
+    // Before any model sees it: a spaced "2 200" is 2200, the words after
+    // "oh wait, no" replace the corrected-away number, and spoken / typo'd
+    // multipliers become plain digits.
+    final normalizedInput = SpokenNumbers.normalize(
+      SpokenCorrections.resolve(
+        SpokenNumbers.collapseSpacedThousands(userInput),
+      ),
+    );
 
     if (templateOverride.trim().isNotEmpty) {
       return templateOverride
@@ -47,13 +54,14 @@ Rules:
 3. "unitAmount": the number as stated, NEVER multiplied by you. Expand spoken multipliers and typos: hundred x100; thousand, thousan, k x1000; million, m x1000000 ("2.5k"=2500, "five hundred"=500, "8 thousand"=8000).
 4. "amountMode": "PER_PERSON" for each / per person / apiece / per head, else "TOTAL".
 5. "quantity": item count in "N things at price" ("4 coffees at 5 dollars a cup": unitAmount 5, quantity 4). Default 1.
-6. "extraPercent": tip, tax or service charge percent ("plus 10% service" = 10). Default 0.
+6. "extraPercent": tip, tax or service percent: "plus 10 percent", "10% tip" = 10. unitAmount stays the base price ("5,000 yen plus 10 percent": unitAmount 5000, extraPercent 10; the app adds it up to 5500). Default 0.
 7. "currency": ISO code (bucks, dollars = USD; yen = JPY; baht = THB; won = KRW; euros = EUR; pounds, quid = GBP). Default $tripCurrency.
 8. "payer": who paid ("Maya paid", "Alex covered", "paid by Liam"); else $defaultPayer.
 9. "splitWith": EVERY member named. "with Maya and Liam" = payer + Maya + Liam; "for Maya" or "bought Maya a ticket" = Maya only; "for me" or "solo" = payer only; "everyone", "all", "the group" or nobody named = all members.
-10. "customSplits": only for ONE shared bill where each person names their own price ("Sushiro, I paid: mine 1200, Maya salmon 1800, Liam udon 950"): {"You":1200,"Maya":1800,"Liam":950}, unitAmount = their sum, splitWith = those people, title = the venue. Otherwise omit it.
+10. Corrections: if the speaker corrects themselves ("4200, oh wait no, 4800", "I mean", "actually"), use only the last value and ignore the corrected-away number. Spaced or comma thousands are one number: "2 200 yen" = "2,200" = 2200.
+11. "customSplits": only for ONE shared bill where each person names their own price ("Sushiro, I paid: mine 1200, Maya salmon 1800, Liam udon 950"): {"You":1200,"Maya":1800,"Liam":950}, unitAmount = their sum, splitWith = those people, title = the venue. Otherwise omit it.
 
-Examples:
+${fromSpeech ? speechHints : ''}Examples:
 "Ramen with Maya and Liam 500 yen each" -> {"items":[{"title":"Ramen","unitAmount":500,"amountMode":"PER_PERSON","quantity":1,"extraPercent":0,"currency":"JPY","category":"MEAL","payer":"$defaultPayer","splitWith":["$defaultPayer","Maya","Liam"]}]}
 "Maya paid 6k yen for taxi" -> {"items":[{"title":"Taxi","unitAmount":6000,"amountMode":"TOTAL","quantity":1,"extraPercent":0,"currency":"JPY","category":"TRANSPORT","payer":"Maya","splitWith":[all members]}]}
 
@@ -62,6 +70,11 @@ User Input: "$normalizedInput"
 Respond ONLY with JSON, no markdown:
 {"items": [{"title": "short description", "unitAmount": 0.0, "amountMode": "TOTAL", "quantity": 1, "extraPercent": 0, "currency": "$tripCurrency", "category": "CATEGORY", "payer": "Name", "splitWith": ["Name1", "Name2"], "customSplits": null}]}''';
   }
+
+  /// Speech-to-text often mishears travel and food words; passed to the model
+  /// when the sentence came from dictation.
+  static const String speechHints = '''Speech-to-text may have misheard food and places: "Michelle"/"Michelle latte" = Matcha (latte), "Ramming" = Ramen, "she in kansen" = Shinkansen, "you cut sue" = Gyukatsu, "yaki tori" = Yakitori. Correct such words.
+''';
 
   /// Prompt for a **recorded voice clip** sent to Gemini as inline audio. The
   /// model first writes the exact words spoken (English, verbatim, no cleanup)
@@ -83,8 +96,10 @@ Respond ONLY with JSON, no markdown:
           'Input: the attached audio clip, a traveler speaking English about '
               'what they spent. First write "transcript": the exact words '
               'spoken, verbatim (keep numbers, names and slang as said, no '
-              'cleanup, no translation). Then parse that transcript into items. '
-              'Member names above are the only people mentioned.',
+              'cleanup, no translation). Spell travel and food words correctly '
+              '(Matcha, Ramen, Shinkansen, Gyukatsu, Yakitori, Okonomiyaki). '
+              'Then parse that transcript into items. Member names above are '
+              'the only people mentioned.',
         )
         .replaceFirst(
           '{"items": [{"title"',

@@ -9,7 +9,6 @@ class SandboxState {
 
   /// `null` follows the Firebase Remote Config `ai_inference_mode`.
   final InferenceMode? selectedMode;
-  final bool forceSimulated;
   final bool isLoading;
   final bool isProbing;
   final HybridAiResult? latestResult;
@@ -20,7 +19,6 @@ class SandboxState {
   const SandboxState({
     this.inputText = 'Ichiran ramen 4800 Alex paid, split Maya and Liam',
     this.selectedMode,
-    this.forceSimulated = false,
     this.isLoading = false,
     this.isProbing = false,
     this.latestResult,
@@ -33,7 +31,6 @@ class SandboxState {
     String? inputText,
     InferenceMode? selectedMode,
     bool clearMode = false,
-    bool? forceSimulated,
     bool? isLoading,
     bool? isProbing,
     HybridAiResult? latestResult,
@@ -46,7 +43,6 @@ class SandboxState {
     return SandboxState(
       inputText: inputText ?? this.inputText,
       selectedMode: clearMode ? null : (selectedMode ?? this.selectedMode),
-      forceSimulated: forceSimulated ?? this.forceSimulated,
       isLoading: isLoading ?? this.isLoading,
       isProbing: isProbing ?? this.isProbing,
       latestResult: clearResults ? null : (latestResult ?? this.latestResult),

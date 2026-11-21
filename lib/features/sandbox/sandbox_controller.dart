@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/enums/inference_source.dart';
+import '../../services/hybrid_ai/ai_unavailable.dart';
 import '../../services/hybrid_ai/hybrid_ai_service.dart';
 import '../trip/trip_controller.dart';
 import 'sandbox_state.dart';
@@ -24,10 +25,6 @@ class SandboxController extends Notifier<SandboxState> {
         : state.copyWith(selectedMode: mode);
   }
 
-  void setForceSimulated(bool enabled) {
-    state = state.copyWith(forceSimulated: enabled);
-  }
-
   /// Re-checks which runtime this device can really execute.
   Future<void> probeRuntime() async {
     state = state.copyWith(isProbing: true);
@@ -47,12 +44,7 @@ class SandboxController extends Notifier<SandboxState> {
     }
   }
 
-  /// A throw-away service so the "Force simulated" switch never mutates the
-  /// shared runtime used by the rest of the app.
-  HybridAiService _service() {
-    if (!state.forceSimulated) return _ai;
-    return HybridAiService(isMockEnabled: true);
-  }
+  HybridAiService _service() => _ai;
 
   Future<void> parseExpense() async {
     final text = state.inputText.trim();
@@ -99,7 +91,9 @@ class SandboxController extends Notifier<SandboxState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Processing failed: $e',
+        errorMessage: e is AiUnavailableException
+            ? e.userMessage
+            : 'Processing failed: $e',
       );
     }
   }

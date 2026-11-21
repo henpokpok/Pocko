@@ -10,7 +10,7 @@
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iOS%20%2F%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-642%2F642%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-663%2F663%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -85,7 +85,7 @@ Pocko implements the official **`PREFER_ON_DEVICE`** hybrid paradigm. It doesn't
 
 ## 🔍 Runtime Firebase AI Logic Verification (For Hackathon Judges)
 
-Judges inspecting this repository can verify that **official Firebase AI Logic SDKs are genuinely imported and executed at runtime** (heuristic regex is strictly an offline safety net for unconfigured headless tests):
+Judges inspecting this repository can verify that **official Firebase AI Logic SDKs are genuinely imported and executed at runtime** (there is **no regex fallback**: when no real model can answer, Pocko says so instead of guessing):
 
 ### 1. Web Hybrid AI (`dart:js_interop` + Firebase JS SDK 12.5.0)
 * **[`web/firebase_ai_web.js`](web/firebase_ai_web.js)**:
@@ -103,7 +103,7 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
   - Automatically enables `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true` on `localhost`.
   - Uses its own named Firebase app (`pocko-ai-bridge`) with App Check initialized, because this module loads a separate copy of the JS SDK from FlutterFire's. Without it Firebase AI Logic answers `401 App Check token is invalid` when enforcement is on. A distinct app name also avoids the "reCAPTCHA has already been rendered" clash on production builds.
   - Sets `thinkingConfig: { thinkingBudget: 0 }` for the cloud model: expense parsing needs no reasoning, and thinking models otherwise burn the 512-token budget and return truncated JSON (retried once without the setting if a model rejects it).
-  - The default cloud model is `gemini-3.1-flash-lite` (measured **1-2 s**; Remote Config key `cloud_fallback_model` can override it without a release). The bridge tries one 8 s attempt per model and then falls back to `gemini-3.8-flash`, which was measured at 5-14 s with occasional hangs past 25 s. Older IDs such as `gemini-2.5-flash` return `404 ... no longer available to new users`; `gemini-flash-lite-latest` rejects `thinkingBudget` with a generic 400, which the bridge retries without it.
+  - The default cloud model is `gemini-3.1-flash-lite` (measured **1-2 s**; Remote Config key `cloud_fallback_model` can override it without a release). The bridge tries one 12 s attempt per model and then falls back to `gemini-3.8-flash`, which was measured at 5-14 s with occasional hangs past 25 s. Older IDs such as `gemini-2.5-flash` return `404 ... no longer available to new users`; `gemini-flash-lite-latest` rejects `thinkingBudget` with a generic 400, which the bridge retries without it.
 * **[`lib/services/hybrid_ai/web_hybrid_ai_bridge_web.dart`](lib/services/hybrid_ai/web_hybrid_ai_bridge_web.dart)**:
   - Modern Dart 3 interop calling `window.firebaseAiWeb.generateContent(...)` (prompt, lowercase mode, Remote Config model/token budget, optional receipt image) across `@JS()` bindings.
 * **[`lib/services/hybrid_ai/web_hybrid_ai_bridge.dart`](lib/services/hybrid_ai/web_hybrid_ai_bridge.dart)**:
@@ -118,17 +118,17 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
     ```
 * **[`android/app/src/main/kotlin/com/hybridtrip/ai/travmate/HybridAiPlugin.kt`](android/app/src/main/kotlin/com/hybridtrip/ai/travmate/HybridAiPlugin.kt)**:
   - Calls `Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(modelName, generationConfig, onDeviceConfig = OnDeviceConfig(mode = InferenceMode.PREFER_ON_DEVICE))` and reads `response.inferenceSource` for truthful telemetry.
-  - **Model fallback chain:** requested model first (with Gemini Nano via AICore when the mode allows, 12 s), then `gemini-3.1-flash-lite`, then `gemini-3.8-flash`, cloud-only with one 8 s attempt each; a model that rejects `thinkingConfig` is retried once without it.
+  - **Model fallback chain:** requested model first (with Gemini Nano via AICore when the mode allows, 12 s), then `gemini-3.1-flash-lite`, then `gemini-3.8-flash`, cloud-only with one 12 s attempt each; a model that rejects `thinkingConfig` is retried once without it.
   - Cloud fallback is **`gemini-3.1-flash-lite`** with thinking disabled (`thinkingConfig { thinkingBudget = 0 }`): expense parsing needs no reasoning, and thinking models would otherwise burn the 512-token budget and return truncated JSON.
   - Decodes base64 receipt images into a `Bitmap` (single-image on-device input, multimodal in the cloud).
-  - **Never fabricates results**: if Firebase is not configured or the call fails it replies `AI_UNAVAILABLE` and Dart falls back to its labelled simulation.
+  - **Never fabricates results**: if Firebase is not configured or the call fails it replies `AI_UNAVAILABLE` and Dart shows an honest banner (offline vs. timeout vs. rejected, with the reason) and a **Try again** that re-sends the same words or recording.
   - Returns `{ "rawJson", "inferenceSource": "on_device" | "in_cloud", "latencyMs", "modelInfo" }`.
   - *Verified:* `flutter build apk --debug` compiles this plugin (the APK's dex contains the `gemini-3.1-flash-lite` default and the `thinkingBudget` call). Not yet run on a physical Android device.
 
 ### 3. iOS / iPadOS Native Hybrid Bridge (`MethodChannel` + Apple Foundation Models + FirebaseAILogic 13.x)
 * **[`ios/Runner/HybridAiPlugin.swift`](ios/Runner/HybridAiPlugin.swift)**:
   - **On-device:** Apple's own Foundation Models framework (`SystemLanguageModel.default` + `LanguageModelSession`, iOS 26+ with Apple Intelligence). It is weakly linked behind `#available(iOS 26.0, *)`, so the app still launches on iOS 15-25.
-  - **Cloud fallback:** the stable Firebase `GenerativeModel` API (`FirebaseAILogic`, firebase-ios-sdk **13.1.1**, linked directly into the Runner target through Swift Package Manager) with `GenerationConfig(thinkingConfig: ThinkingConfig(thinkingBudget: 0))`, `gemini-3.1-flash-lite` first, then `gemini-3.8-flash`, one 8 s attempt each (a model that rejects `thinkingConfig` is retried once without it). Receipt photos are decoded to a `UIImage` and always use the cloud model (Apple on-device is text-only).
+  - **Cloud fallback:** the stable Firebase `GenerativeModel` API (`FirebaseAILogic`, firebase-ios-sdk **13.1.1**, linked directly into the Runner target through Swift Package Manager) with `GenerationConfig(thinkingConfig: ThinkingConfig(thinkingBudget: 0))`, `gemini-3.1-flash-lite` first, then `gemini-3.8-flash`, one 12 s attempt each (a model that rejects `thinkingConfig` is retried once without it). Receipt photos are decoded to a `UIImage` and always use the cloud model (Apple on-device is text-only).
   - Routing follows the Remote Config mode (`ONLY_ON_DEVICE`, `ONLY_IN_CLOUD`, `PREFER_IN_CLOUD`, default `PREFER_ON_DEVICE`). firebase-ios-sdk 13.0 *removed* the interim `HybridModel` / `GenerativeModelSession` / `SystemLanguageModel` types, so hybrid routing lives in the plugin itself.
   - Replies **exactly once** per call; when no runtime is available it returns `AI_UNAVAILABLE` instead of simulated data.
   - *Verified:* `flutter build ios --debug --no-codesign` (Xcode 27) compiles this file with `FirebaseAILogic` and `FoundationModels` linked. Not yet run on a physical iPad.
@@ -150,7 +150,7 @@ Judges inspecting this repository can verify that **official Firebase AI Logic S
 ## 🧑‍⚖️ Judge Quick Tour (2 minutes, no microphone needed)
 
 0. **Open the live app: [https://pocko-hybrid-ai.web.app](https://pocko-hybrid-ai.web.app)** (or run it yourself with `flutter run -d chrome`). The app opens on an animated **landing story** of three illustrated scenes (log live at a café offline in 3 s, a bank slip snapping onto its waiting expense, and the on-device privacy shield masking `•••• 4829`). Tap **Try Tokyo Demo Trip** for pre-loaded data in one click, or **Skip / Next ➔ Set up my trip** to create your own trip (name, destination that auto-pairs the currency, home currency, friends as name tags: *no app install needed for friends*). **Manage Group ➔ New Trip / Setup Wizard** reopens it any time.
-1. Tap the glowing **+**. Type something like *Dinner 1 thousand yen, Alex paid, split with Maya and Liam* (or tap the mic: the demo dictation analyzes itself after a natural pause) and press **Confirm**. Pocko juggles while your words shimmer (about half a second when no cloud/on-device model is provisioned, instantly direct when Firebase AI Logic is configured), then returns your sentence with glowing item, price and category pills and a telemetry pill: `🟢 On-Device • Gemini Nano • 92 ms` or `☁️ Cloud Fallback • Gemini Flash • 840 ms`. A tiny `SIM` tag appears only when the offline safety-net engine answered instead of a real model.
+1. Tap the glowing **+**. Type something like *Dinner 1 thousand yen, Alex paid, split with Maya and Liam* (or tap the mic: online it records ONE continuous clip and sends it to Gemini audio; a 5 s thinking pause never cuts it) and press **Confirm**. Pocko juggles while your words shimmer, then returns your sentence with glowing item, price and category pills and a telemetry pill: `🟢 On-Device AI • Gemini Nano` or `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1.8 s`. Tapping a pill once selects that expense (no keyboard); tapping it again, or the pencil, edits it. If no real model can answer (for example offline on a phone without Gemini Nano) a red banner explains why and offers Try again; Pocko never guesses with a regex.
 2. Tap any pill to edit it instantly (item name or price). Tapping an item also focuses it: the friend avatars and the **paid by** chip below follow the focused item. Press **Confirm** again: a short **Logged** beat, then the overlay fades back to the live page. Home, Expenses and Settle all update at once (and **Undo** is one tap away).
 3. Open **Matcher**. Grade Pocko's pairs with **✓ Correct** / **✕ Wrong** (the Wrong sheet offers other slips, a gallery pick, sample slips or *Paid in Cash*), or run **Sample Slips**: *Card alert • TeamLab* (local AI, PII masked, exact match) and *Paris bistro receipt (EUR)* (itemized cloud fallback, converted to ¥). Cards end with `🟢 (Local) • 71ms` / `☁️ (Cloud) • 640ms` style footers; the pending-slip count lives on the Matcher icon in the navigation bar.
 4. On **Expenses**, scrub the date strip (*All Dates*, *Pre-Trip*, each trip day) to see that day's total. On **Settle**, read each directional transfer lane (debtor ➔ amount ➔ creditor), expand *Why this amount?* to see exactly which expenses make it up, then press **Record Payment** (or **+ Record Repayment** for any money that changed hands, optionally with a slip photo): balances and charts recalculate immediately and the payment appears in **Repayment History** (**Undo** is one tap away).
@@ -181,7 +181,7 @@ flowchart TD
 
     subgraph Logic[Domain Logic & Hybrid Orchestration]
         DebtSimp[DebtSimplifier<br/>O N log N Greedy Net Balance Algorithm]
-        HybridAi[HybridAiService<br/>Remote Config Policy, Honest SIM Fallback]
+        HybridAi[HybridAiService<br/>Remote Config Policy, Real AI or an Honest Error]
         SlipPipe[SlipAnalyzer<br/>PiiMasker ➔ Hybrid AI ➔ SlipMatcher]
         PromptBuilder[ExpensePromptBuilder<br/>Compact &lt;200-Word Single-Turn Schema]
         SyncSvc[SquadSyncService<br/>Firestore Offline Persistence & Sync]
@@ -248,17 +248,17 @@ flowchart TD
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
 | **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & reCAPTCHA Enterprise (Fraud Defense) protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 45 test suites (642 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 46 test suites (663 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 45 test suites (642 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 46 test suites (663 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +642: All tests passed!
+flutter test      # 00:08 +663: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
@@ -279,6 +279,7 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `smart_pricing_and_splits_test` | Neuro-symbolic maths (`each`, `per person`, `apiece`, `per head`, quantity, `%` surcharge, discounts ignored, head-counts ignored), `ParsedExpenseDraft` totals / breakdown labels / legacy + new schema, `with` vs `for`, `everyone`, third-party payers, spoken numbers, currency slang (`bucks`, `quid`...), compound utterances, normalizer repairs (self-multiplied totals, invented percentages), prompt schema |
 | `travel_category_gazetteer_test` | Disneyland, Universal Studio, Teamlab, Cosmo Land, Lego land, museums and the National Center are never `MISC`; venue-vs-item override (`Disneyland headband` = Souvenirs, `Universal churros` = Meals); brands (Suica, Ichiran, 7-Eleven, Don Quijote, APA...); country / car-park false positives; Manual Expense and post-LLM `MISC` rescue; prompt anchors |
 | `raw_prompt_and_per_person_ui_test` | `500 yen each` = ¥1,500 then ¥1,000 / ¥2,000 as member pills toggle, badge text, hand-typed price detaches, committed totals, `Expense.note` holds the verbatim prompt (also for multi-item utterances), the edit sheet shows and preserves it, italic one-line preview on Expense cards |
+| `real_ai_only_test` | **No regex fallback**: a real service with no runtime throws `AiUnavailableException` (offline vs. timeout vs. rejected), the red banner with Try again, Clear and the banner pinned above the fold, 2-step tap (select, then edit), spaced thousands (`2 200` = 2200), self-corrections, `plus 10 percent`, dictation hints |
 | `real_ai_hardening_test` | `"Eat Ramen with Maya and Liam for 8 thousand yen"` always gives title `Ramen`, ¥8,000, `MEAL`, split `You, Maya, Liam` (offline parser **and** the `ExpenseNormalizer` that repairs real model answers: member-name titles, leading verbs, dropped multipliers); `gemini-3.8-flash` + thinking off verified in the Kotlin, Swift, JS and Dart sources (no `gemini-2.5-flash` left); Manual Expense asks `HybridAiService.suggestCategory` after the 2.5 s pause |
 | `selector_and_toast_test` | `PockoSelector` popovers capped at 320 px, scrolling, instant search above 5 options (filter, "No matches", clear); `showPockoToast` pill card (icon, message, detail, shrinking bar, Undo), guaranteed 5 s auto-dismiss with an action button, replacement; `(3) Liam, Maya, Alex` formatting with ellipsis |
 | `capture_nine_point_test` | Typing 0 -> 1 -> N characters never drops focus or re-creates the `TextField`; member-name pills share the title/price pill size, weight, padding and radius; explicit selected names; the celebratory **Logged** beat (burst, confetti, spring pill, 950 ms); mascot sizes 96-112 px (headers) and 140-160 px (empty states) incl. 320 px phones; the 3 illustrated landing scenes |
@@ -294,7 +295,7 @@ flutter build web --no-tree-shake-icons   # ✓ Built build/web
 | `walkthrough_regressions_test` | Findings of the final real-user walkthrough: negative amounts print `-¥6,800`, the Expenses strip total follows the category filter, the setup card keeps focus after adding a friend, the **repayment typo guard** (a second tap for an amount above what is owed), separate *edit* / *delete* denial messages, the gallery button label scales instead of truncating |
 | `telemetry_and_mascot_test`, `pocko_mascot_test` | Telemetry pill variants, all six mascot moods animating, blink schedule |
 
-All widget tests run with the simulated engine and zero latency (`hybridAiServiceProvider` override), so they are deterministic offline.
+Widget tests inject a deterministic stand-in for the model (`hybridAiServiceProvider` override, test-only); the shipped app never uses it. `real_ai_only_test` proves a real service with no runtime throws `AiUnavailableException` instead of regex-parsing.
 
 ## 🚢 Release builds for demo recording
 

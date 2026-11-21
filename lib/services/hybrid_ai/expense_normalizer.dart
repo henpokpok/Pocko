@@ -2,6 +2,7 @@ import '../../core/enums/expense_category.dart';
 import '../../core/utils/travel_gazetteer.dart';
 import 'local_expense_parser.dart';
 import 'parsed_expense_draft.dart';
+import 'spoken_numbers.dart';
 
 /// Safety net applied to every real (on-device or cloud) model answer so a
 /// hallucinated or sloppy reply can never reach the UI as-is.
@@ -30,6 +31,11 @@ class ExpenseNormalizer {
     required String defaultPayer,
   }) {
     if (liveItems.isEmpty) return liveItems;
+    // The words after "oh wait, no..." replace the corrected-away number, and
+    // a spaced "2 200" is 2200, before any deterministic cross-check.
+    userInput = SpokenCorrections.resolve(
+      SpokenNumbers.collapseSpacedThousands(userInput),
+    );
 
     final segments = LocalExpenseParser.segment(
       userInput,
@@ -114,7 +120,12 @@ class ExpenseNormalizer {
         }
       } else {
         // Unpaired: keep the model's reading, but never invent a percentage.
-        if (!segment.contains('%')) percent = 0;
+        if (!RegExp(
+          r'%|per\s?cent|percent|\bpct\b',
+          caseSensitive: false,
+        ).hasMatch(segment)) {
+          percent = 0;
+        }
         if (mode == AmountMode.perPerson &&
             !LocalExpenseParser.hasPerPersonCue(segment)) {
           mode = AmountMode.total;

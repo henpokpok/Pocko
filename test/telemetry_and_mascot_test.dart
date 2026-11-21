@@ -46,7 +46,10 @@ void main() {
           modelInfo: 'Gemini Nano (Chrome Prompt API, on-device)',
         ),
       );
-      expect(find.text('🟢 On-Device AI • Gemini Nano (Chrome)'), findsOneWidget);
+      expect(
+        find.text('🟢 On-Device AI • Gemini Nano (Chrome)'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Cloud pill shows Gemini Flash fallback', (tester) async {
@@ -74,7 +77,10 @@ void main() {
           ),
         );
         expect(find.text('SIM'), findsNothing);
-        expect(find.textContaining('Offline Safety Net • Rule Engine'), findsOneWidget);
+        expect(
+          find.textContaining('Offline Safety Net • Rule Engine'),
+          findsOneWidget,
+        );
 
         await pump(
           tester,

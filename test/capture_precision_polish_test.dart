@@ -311,10 +311,11 @@ void main() {
       expect(_token('maya'), findsOneWidget);
       expect(_plain('liam'), findsOneWidget);
 
+      // One tap selects the item: highlights follow, and NO editor / keyboard.
       await tester.tap(find.byKey(const ValueKey('pill_title_1')));
       await settle(tester, 700);
-      await tester.tap(find.byTooltip('Cancel'));
-      await settle(tester, 400);
+      expect(find.byKey(const ValueKey('inline_editor')), findsNothing);
+      expect(find.byKey(const ValueKey('inline_edit_field')), findsNothing);
       expect(_token('liam'), findsOneWidget);
       expect(_plain('alex'), findsOneWidget);
       expect(_plain('maya'), findsOneWidget);
@@ -363,12 +364,17 @@ void main() {
         );
         final t = tester.getRect(transcript);
         final c = tester.getRect(cat);
+        // The category pill and the edit pencil form one centered row.
+        final pencil = tester.getRect(
+          find.byKey(const ValueKey('edit_item_0')),
+        );
+        final group = c.expandToInclude(pencil);
         expect(
           c.top,
           greaterThanOrEqualTo(t.bottom),
           reason: 'directly underneath',
         );
-        expect(c.center.dx, closeTo(t.center.dx, 12), reason: 'centered');
+        expect(group.center.dx, closeTo(t.center.dx, 12), reason: 'centered');
       },
     );
 

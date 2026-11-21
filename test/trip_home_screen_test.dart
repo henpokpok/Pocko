@@ -60,8 +60,10 @@ void main() {
 
         final fmt = DateFormat('MMM d');
         final now = DateTime.now();
+        // Demo timestamps hang off 15:00 today (see TripState.initial).
+        final anchor = DateTime(now.year, now.month, now.day, 15);
         String dayOf(int hoursAgo) =>
-            fmt.format(now.subtract(Duration(hours: hoursAgo)));
+            fmt.format(anchor.subtract(Duration(hours: hoursAgo)));
         expect(find.text('Shinkansen to Kyoto • ${dayOf(2)}'), findsOneWidget);
         expect(
           find.text('TeamLab Borderless Tickets • ${dayOf(6)}'),

@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **642 / 642 pass** (45 suites) |
+| `flutter test` | **663 / 663 pass** (46 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663.
 
 ---
 
@@ -151,6 +151,13 @@ The built web app was run in the browser against the real Firebase project (App 
 - The Group Net Balance row omits the extra "+ Group Invite" orb for groups of four or more, so nothing clips at 412 px.
 - Cloud models: `gemini-3.1-flash-lite`, then `gemini-3.8-flash`. A live check on the hosted site showed `gemini-2.5-flash` answers 404 ("no longer available to new users, use gemini-3.8-flash"), so it is deliberately not used. README rows that still said 2.5 Flash were corrected.
 - Rebuild scope: the app shell watches only the trip name, sync status and Matcher badge; `MediaQuery.sizeOf` / `viewInsetsOf` replace `MediaQuery.of`; slip and receipt images decode at display size (`cacheWidth`).
+
+### Phase 15. Real AI only (no regex fallback) after the Samsung voice test
+- **Root causes found:** a failed or slow Gemini call silently fell back to the regex parser; after one failed audio call the sheet stayed on Android dictation for the rest of the session; the app's 20 s ceiling was shorter than the native chain (12 s on-device + 2 x 8 s cloud); a 1.5 s DNS check could call a slow network "offline"; and the cross-check dropped `10 percent` (it only knew `%`).
+- **Fixes:** `parseExpenseText` / `parseExpenseAudio` now raise `AiUnavailableException` (offline, timeout, rejected, unavailable) and the capture sheet shows a pinned red banner with the reason and a **Try again** that re-sends the same recording or words. Ceilings are 40 s (text) / 55 s (audio), cloud attempts 12 s, the network probe tries twice with 3 s each, and online voice never downgrades to dictation. A recording ends after 6 s of dead air (a thinking pause never cuts it). The sandbox "force simulated" switch was removed.
+- **Prompts and cross-checks:** `plus 10 percent`, spoken self-corrections (`4,200... oh wait no, 4,800`) and spaced thousands (`2 200`) are handled in the prompt, in `SpokenCorrections` / `SpokenNumbers.collapseSpacedThousands` and in `ExpenseNormalizer`; dictation passes phonetic hints (Michelle = Matcha, Ramming = Ramen, ...); offline dictation collapses `2 200` before analysis.
+- **UI:** the first tap on a highlighted keyword only selects that expense (no keyboard); a second tap or the pencil edits. The transcript scrolls inside a box while Clear and the red banner stay pinned above the fold.
+- **Demo data:** timestamps hang off 15:00 today, so shortly after midnight the demo no longer loses its Today group.
 
 ---
 

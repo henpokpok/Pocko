@@ -268,6 +268,10 @@ class TripState {
     const liam = TripMember(id: 'liam', name: 'Liam');
 
     final now = DateTime.now();
+    // Demo timestamps hang off 15:00 today (not off the wall clock): shortly
+    // after midnight "2 hours ago" used to land on yesterday and the demo
+    // showed no Today group.
+    final anchor = DateTime(now.year, now.month, now.day, 15);
 
     final initialExpenses = [
       ExpenseItem(
@@ -278,7 +282,7 @@ class TripState {
         category: ExpenseCategory.INSURANCE,
         payerId: 'you',
         splitWithMemberIds: const ['you'],
-        createdAt: now.subtract(const Duration(days: 12, hours: 3)),
+        createdAt: anchor.subtract(const Duration(days: 12, hours: 3)),
         inferenceSource: InferenceSource.manual,
         slipStatus: SlipStatus.matched,
       ),
@@ -290,7 +294,7 @@ class TripState {
         category: ExpenseCategory.MEAL,
         payerId: 'you',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 28)),
+        createdAt: anchor.subtract(const Duration(hours: 28)),
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 92,
@@ -304,7 +308,7 @@ class TripState {
         category: ExpenseCategory.TRANSPORT,
         payerId: 'alex',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 24)),
+        createdAt: anchor.subtract(const Duration(hours: 24)),
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 110,
@@ -318,7 +322,7 @@ class TripState {
         category: ExpenseCategory.SNACK_CAFE,
         payerId: 'maya',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 18)),
+        createdAt: anchor.subtract(const Duration(hours: 18)),
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 85,
@@ -332,7 +336,7 @@ class TripState {
         category: ExpenseCategory.ATTRACTION,
         payerId: 'you',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 12)),
+        createdAt: anchor.subtract(const Duration(hours: 12)),
         inferenceSource: InferenceSource.inCloud,
         modelInfo: 'Gemini Flash (seed data)',
         latencyMs: 480,
@@ -346,7 +350,7 @@ class TripState {
         category: ExpenseCategory.ATTRACTION,
         payerId: 'alex',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 6)),
+        createdAt: anchor.subtract(const Duration(hours: 6)),
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 98,
@@ -360,7 +364,7 @@ class TripState {
         category: ExpenseCategory.TRANSPORT,
         payerId: 'liam',
         splitWithMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        createdAt: now.subtract(const Duration(hours: 2)),
+        createdAt: anchor.subtract(const Duration(hours: 2)),
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 104,
@@ -374,7 +378,7 @@ class TripState {
       baseCurrency: 'JPY',
       members: const [you, alex, maya, liam],
       expenses: initialExpenses,
-      createdAt: now.subtract(const Duration(days: 3)),
+      createdAt: anchor.subtract(const Duration(days: 3)),
       startDate: DateTime(
         now.year,
         now.month,
@@ -398,7 +402,7 @@ class TripState {
         maskedFieldCount: 1,
         latencyMs: 71,
         modelInfo: 'Gemini Nano (seed data)',
-        createdAt: now.subtract(const Duration(hours: 17)),
+        createdAt: anchor.subtract(const Duration(hours: 17)),
       ),
       BankSlip(
         id: 'slip_2',
@@ -414,7 +418,7 @@ class TripState {
         maskedFieldCount: 1,
         latencyMs: 68,
         modelInfo: 'Gemini Nano (seed data)',
-        createdAt: now.subtract(const Duration(hours: 11)),
+        createdAt: anchor.subtract(const Duration(hours: 11)),
       ),
       BankSlip(
         id: 'slip_3',
@@ -431,7 +435,7 @@ class TripState {
         maskedFieldCount: 1,
         latencyMs: 74,
         modelInfo: 'Gemini Nano (seed data)',
-        createdAt: now.subtract(const Duration(hours: 1)),
+        createdAt: anchor.subtract(const Duration(hours: 1)),
       ),
     ];
 

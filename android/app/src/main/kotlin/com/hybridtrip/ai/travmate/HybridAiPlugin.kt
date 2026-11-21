@@ -55,7 +55,7 @@ class HybridAiPlugin : FlutterPlugin, MethodCallHandler {
         const val SLOW_CLOUD_MODEL = "gemini-3.8-flash"
 
         /** One attempt per cloud model: a hung model never costs more than this. */
-        const val CLOUD_ATTEMPT_TIMEOUT_MS = 8_000L
+        const val CLOUD_ATTEMPT_TIMEOUT_MS = 12_000L
 
         /** Recorded speech (inline audio) is uploaded and transcribed in one cloud call. */
         const val AUDIO_ATTEMPT_TIMEOUT_MS = 15_000L

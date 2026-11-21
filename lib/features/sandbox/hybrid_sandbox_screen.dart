@@ -619,40 +619,7 @@ class _HybridSandboxScreenState extends ConsumerState<HybridSandboxScreen> {
               color: AppTheme.textMuted,
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Force simulated engine',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Skip real runtimes and use the offline heuristic engine (results are labelled Offline Safety Net • Rule Engine)',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        color: AppTheme.textSlate,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch.adaptive(
-                value: state.forceSimulated,
-                onChanged: (v) {
-                  controller.setForceSimulated(v);
-                  controller.probeRuntime();
-                },
-                activeTrackColor: AppTheme.primaryEmerald,
-              ),
-            ],
-          ),
+          const SizedBox(height: 4),
           const Divider(height: 20),
           SizedBox(
             width: double.infinity,

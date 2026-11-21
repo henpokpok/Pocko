@@ -42,7 +42,7 @@ public class HybridAiPlugin: NSObject, FlutterPlugin {
     /// fallback, so a hung or retired model never costs more than one short attempt.
     private static let fastCloudModel = "gemini-3.1-flash-lite"
     private static let slowCloudModel = "gemini-3.8-flash"
-    private static let cloudAttemptTimeout: TimeInterval = 8
+    private static let cloudAttemptTimeout: TimeInterval = 12
     /// Recorded speech (inline audio) is uploaded and transcribed in one cloud call.
     private static let audioAttemptTimeout: TimeInterval = 15
 

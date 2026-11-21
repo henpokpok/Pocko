@@ -211,7 +211,7 @@ void main() {
       expect(kt, contains('thinkingBudget = 0'));
       // Fallback chain: fast model, slow model, short attempts, thinking-reject retry.
       expect(kt, contains('SLOW_CLOUD_MODEL = "gemini-3.8-flash"'));
-      expect(kt, contains('CLOUD_ATTEMPT_TIMEOUT_MS = 8_000L'));
+      expect(kt, contains('CLOUD_ATTEMPT_TIMEOUT_MS = 12_000L'));
       expect(kt, contains('withTimeout'));
       expect(kt, contains('rejectsThinkingConfig'));
     });
@@ -276,7 +276,7 @@ void main() {
       expect(js, contains('SLOW_CLOUD_MODEL = "gemini-3.8-flash"'));
       expect(js, contains('thinkingBudget: 0'));
       // One 8 s attempt per model (not one 20 s hang), then the next model.
-      expect(js, contains('CLOUD_ATTEMPT_TIMEOUT_MS = 8000'));
+      expect(js, contains('CLOUD_ATTEMPT_TIMEOUT_MS = 12000'));
       expect(js, contains('trying next model'));
       // Models that reject thinkingConfig (generic 400) are retried without it.
       expect(js, contains('modelsRejectingThinking'));

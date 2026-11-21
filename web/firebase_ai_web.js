@@ -192,7 +192,7 @@ const SLOW_CLOUD_MODEL = "gemini-3.8-flash";
 
 // One attempt must answer within this long, otherwise the next model in the chain is
 // tried: a hung request used to burn the whole 20 s ceiling before falling back.
-const CLOUD_ATTEMPT_TIMEOUT_MS = 8000;
+const CLOUD_ATTEMPT_TIMEOUT_MS = 12000;
 
 // Spoken-expense audio (inline data) is uploaded and transcribed in one call: a little more room.
 const AUDIO_ATTEMPT_TIMEOUT_MS = 15000;
