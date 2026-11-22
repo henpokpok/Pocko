@@ -26,11 +26,11 @@ class SlipSamples {
 
   static const List<SlipSample> all = [
     SlipSample(
-      id: 'sample_chase_teamlab',
+      id: 'sample_card_teamlab',
       title: 'Card alert • TeamLab',
       subtitle: '🟢 Local AI masks the card number, then matches your TeamLab tickets',
       icon: Icons.credit_card_rounded,
-      rawText: '''Chase • Card transaction alert
+      rawText: '''Bank Card • Card transaction alert
 Merchant: TEAMLAB BORDERLESS TOKYO
 Amount: JPY 15,400
 Card: 4929 1823 7701 5521
@@ -39,11 +39,11 @@ Time: 11:42
 Contact: alex.morgan@example.com''',
     ),
     SlipSample(
-      id: 'sample_wise_vending',
+      id: 'sample_travelcard_vending',
       title: 'Bank notice • Unknown shop',
       subtitle: '🟢 Local AI • no confident match, so Pocko asks you to verify',
       icon: Icons.account_balance_rounded,
-      rawText: '''Wise • Card payment
+      rawText: '''Travel Card • Card payment
 Merchant: SEVEN-ELEVEN SHINJUKU
 Amount: JPY 1,240
 Card: 5412 7512 3456 2087

@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **669 / 669 pass** (46 suites) |
+| `flutter test` | **673 / 673 pass** (46 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668 → 669.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668 → 669 → 673.
 
 ---
 

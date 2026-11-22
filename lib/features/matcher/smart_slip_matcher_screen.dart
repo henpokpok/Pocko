@@ -1090,16 +1090,21 @@ class _MatchCard extends StatelessWidget {
                       color: tierBg,
                       borderRadius: AppTheme.pillRadius,
                     ),
-                    child: Text(
-                      tier == SlipMatchTier.manual
-                          ? tier!.label
-                          : '${tier!.label} • ${s.matchPercentage}% Match',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: tierColor,
+                    // Scales down instead of ever showing "…" (412 px phones).
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        tier == SlipMatchTier.manual
+                            ? tier!.label
+                            : '${tier!.label} • ${s.matchPercentage}%',
+                        key: ValueKey('match_tier_${s.id}'),
+                        maxLines: 1,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: tierColor,
+                        ),
                       ),
                     ),
                   ),
@@ -1301,6 +1306,7 @@ class _MatchCard extends StatelessWidget {
                     source: s.inferenceSource,
                     latencyMs: s.latencyMs,
                     simulated: s.isSimulated,
+                    slip: true,
                   )
                 : TelemetryFooter(
                     key: ValueKey('footer_${e!.id}'),

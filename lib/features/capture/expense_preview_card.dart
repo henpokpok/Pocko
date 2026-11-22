@@ -130,7 +130,10 @@ class ExpensePreviewCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${CurrencyHelper.formatAmount(each, base)} each',
+                    // Unequal (itemized) shares have no single "each".
+                    itemized
+                        ? 'Custom split • $count people'
+                        : '${CurrencyHelper.formatAmount(each, base)} each',
                     key: const ValueKey('preview_each'),
                     style: AppTheme.tabularNumberStyle(
                       fontSize: 11,

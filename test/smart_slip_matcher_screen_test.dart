@@ -43,9 +43,10 @@ void main() {
     (tester) async {
       await pumpPocko(tester, const SmartSlipMatcherScreen(), size: tall);
       expect(find.byType(TelemetryFooter), findsNWidgets(4));
-      expect(find.text('🟢 (Local) • 71ms'), findsOneWidget);
-      expect(find.text('🟢 (Local) • 68ms'), findsOneWidget);
-      expect(find.text('🟢 (Local) • 74ms'), findsOneWidget);
+      // Slips: the on-device masking + matching is the "Local PII Shield".
+      expect(find.text('🛡️ Local PII Shield • 71ms'), findsOneWidget);
+      expect(find.text('🛡️ Local PII Shield • 68ms'), findsOneWidget);
+      expect(find.text('🛡️ Local PII Shield • 74ms'), findsOneWidget);
       expect(
         find.text('🟢 (Local) • 98ms'),
         findsOneWidget,
@@ -226,7 +227,7 @@ void main() {
   });
 
   testWidgets(
-    'Local sample: PII is masked on-device, auto-matches TeamLab and shows an (Rule Engine) footer',
+    'Local sample: PII is masked on-device, auto-matches TeamLab and shows the Local PII Shield footer',
     (tester) async {
       final container = await pumpPocko(
         tester,
@@ -249,10 +250,10 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('(Rule Engine) • '),
+          matching: find.textContaining('🛡️ Local PII Shield • '),
         ),
         findsOneWidget,
-        reason: 'simulated engine is labelled honestly',
+        reason: 'local match, never "Rule Engine"',
       );
     },
   );
@@ -282,7 +283,10 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(ValueKey('footer_${slip.id}')),
-          matching: find.textContaining('📴 (Rule Engine) • '),
+          // The test engine is the deterministic stand-in, so no cloud call was
+          // made and the footer must not claim one; a real cloud answer reads
+          // "☁️ Cloud Gemini".
+          matching: find.textContaining('🛡️ Local PII Shield • '),
         ),
         findsOneWidget,
       );

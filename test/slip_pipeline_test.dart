@@ -17,7 +17,7 @@ SlipAnalyzer _analyzer() =>
 void main() {
   group('PiiMasker', () {
     test('Masks card numbers, e-mails, phone numbers and holder names', () {
-      final masked = PiiMasker.mask('''Chase alert
+      final masked = PiiMasker.mask('''Bank Card alert
 Card: 4929 1823 7701 5521
 Cardholder: Alex Morgan
 Contact: alex.morgan@example.com
@@ -171,7 +171,7 @@ Call +81 3 1234 5678''');
       'Bank notification stays on-device and matches the TeamLab tickets',
       () async {
         final sample = SlipSamples.all.firstWhere(
-          (s) => s.id == 'sample_chase_teamlab',
+          (s) => s.id == 'sample_card_teamlab',
         );
         final analysis = await _analyzer().analyzeText(
           rawText: sample.rawText,
@@ -199,7 +199,7 @@ Call +81 3 1234 5678''');
       'Unknown convenience-store notice requires manual verification',
       () async {
         final sample = SlipSamples.all.firstWhere(
-          (s) => s.id == 'sample_wise_vending',
+          (s) => s.id == 'sample_travelcard_vending',
         );
         final slip = (await _analyzer().analyzeText(
           rawText: sample.rawText,

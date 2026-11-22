@@ -160,11 +160,16 @@ class TelemetryFooter extends StatelessWidget {
   final int? latencyMs;
   final bool simulated;
 
+  /// A bank-slip footer: `🛡️ Local PII Shield` for the on-device masking and
+  /// matching, `☁️ Cloud Gemini` for complex foreign receipts.
+  final bool slip;
+
   const TelemetryFooter({
     super.key,
     required this.source,
     this.latencyMs,
     this.simulated = false,
+    this.slip = false,
   });
 
   /// Plain text of the badge (used by tests and semantics).
@@ -172,7 +177,13 @@ class TelemetryFooter extends StatelessWidget {
     InferenceSource source,
     int? latencyMs, {
     bool simulated = false,
+    bool slip = false,
   }) {
+    if (slip) {
+      final cloud = source == InferenceSource.inCloud && !simulated;
+      final name = cloud ? '☁️ Cloud Gemini' : '🛡️ Local PII Shield';
+      return latencyMs == null ? name : '$name • ${latencyMs}ms';
+    }
     final emoji = switch (source) {
       _ when simulated => '📴',
       InferenceSource.onDevice => '🟢',
@@ -181,7 +192,7 @@ class TelemetryFooter extends StatelessWidget {
     };
     if (source == InferenceSource.manual) return '$emoji (Manual)';
     final kind = simulated
-        ? 'Rule Engine'
+        ? 'Local'
         : (source == InferenceSource.onDevice ? 'Local' : 'Cloud');
     return latencyMs == null
         ? '$emoji ($kind)'
@@ -190,7 +201,7 @@ class TelemetryFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = format(source, latencyMs, simulated: simulated);
+    final text = format(source, latencyMs, simulated: simulated, slip: slip);
     return Semantics(
       label: 'AI source: $text',
       child: ExcludeSemantics(

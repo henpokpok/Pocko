@@ -389,7 +389,7 @@ class TripState {
     final initialSlips = [
       BankSlip(
         id: 'slip_1',
-        bankName: 'Wise Card',
+        bankName: 'Travel Card',
         maskedAccount: '•••• 4829',
         amount: 3500,
         currency: 'JPY',
@@ -397,8 +397,7 @@ class TripState {
         merchant: 'Akihabara Gachapon',
         targetExpenseId: 'exp_3',
         matchPercentage: 100,
-        maskedText:
-            'Wise • Card payment ¥3,500 • Akihabara Gachapon • Card •••• 4829',
+        maskedText: 'Travel Card • Card payment ¥3,500 • Akihabara Gachapon • Card •••• 4829',
         maskedFieldCount: 1,
         latencyMs: 71,
         modelInfo: 'Gemini Nano (seed data)',
@@ -406,7 +405,7 @@ class TripState {
       ),
       BankSlip(
         id: 'slip_2',
-        bankName: 'Chase Sapphire',
+        bankName: 'Credit Card',
         maskedAccount: '•••• 1104',
         amount: 8800,
         currency: 'JPY',
@@ -414,7 +413,8 @@ class TripState {
         merchant: 'Shibuya Sky',
         targetExpenseId: 'exp_4',
         matchPercentage: 100,
-        maskedText: 'Chase • You spent ¥8,800 at SHIBUYA SKY • Card •••• 1104',
+        maskedText:
+            'Credit Card • You spent ¥8,800 at SHIBUYA SKY • Card •••• 1104',
         maskedFieldCount: 1,
         latencyMs: 68,
         modelInfo: 'Gemini Nano (seed data)',
@@ -422,16 +422,15 @@ class TripState {
       ),
       BankSlip(
         id: 'slip_3',
-        bankName: 'Apple Pay • Suica',
+        bankName: 'Mobile Pay • Transit Card',
         maskedAccount: '•••• 9021',
         amount: 18200,
         currency: 'JPY',
         time: '18:40',
-        merchant: 'JR Shinkansen',
+        merchant: 'Shinkansen Ticket',
         targetExpenseId: 'exp_6',
         matchPercentage: 98,
-        maskedText:
-            'Apple Pay • Suica top-up ¥18,200 • JR Central • Device •••• 9021',
+        maskedText: 'Mobile Pay • Transit card top-up ¥18,200 • Rail ticket • Device •••• 9021',
         maskedFieldCount: 1,
         latencyMs: 74,
         modelInfo: 'Gemini Nano (seed data)',

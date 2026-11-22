@@ -37,6 +37,9 @@ class SlipAnalyzer {
   static final RegExp _timePattern = RegExp(r'\b([01]?\d|2[0-3]):([0-5]\d)\b');
 
   static const List<String> _banks = [
+    'Bank Card',
+    'Travel Card',
+    'Credit Card',
     'Wise',
     'Chase',
     'Apple Pay',

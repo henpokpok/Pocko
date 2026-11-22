@@ -132,11 +132,28 @@ void main() {
       );
       expect(
         TelemetryFooter.format(InferenceSource.onDevice, 84, simulated: true),
-        '📴 (Rule Engine) • 84ms',
+        '📴 (Local) • 84ms',
       );
       expect(
         TelemetryFooter.format(InferenceSource.inCloud, 612, simulated: true),
-        '📴 (Rule Engine) • 612ms',
+        '📴 (Local) • 612ms',
+      );
+      expect(
+        TelemetryFooter.format(InferenceSource.onDevice, 71, slip: true),
+        '🛡️ Local PII Shield • 71ms',
+      );
+      expect(
+        TelemetryFooter.format(InferenceSource.inCloud, 640, slip: true),
+        '☁️ Cloud Gemini • 640ms',
+      );
+      expect(
+        TelemetryFooter.format(
+          InferenceSource.inCloud,
+          640,
+          slip: true,
+          simulated: true,
+        ),
+        '🛡️ Local PII Shield • 640ms',
       );
       expect(
         TelemetryFooter.format(InferenceSource.manual, null),

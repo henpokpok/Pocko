@@ -9,7 +9,7 @@
 3. [Google Material 3 Expressive Design System](#3-google-material-3-expressive-design-system)
 4. [Vector Mascot Engineering: The "Pocko" Character System](#4-vector-mascot-engineering-the-pocko-character-system)
 5. [Prompt Engineering & The 12 Travel Categories](#5-prompt-engineering--the-12-travel-categories)
-6. [Mathematical Debt Simplification Algorithm ($O(N \log N)$)](#6-mathematical-debt-simplification-algorithm-on-log-n)
+6. [Mathematical Debt Simplification Algorithm (O(N log N))](#6-mathematical-debt-simplification-algorithm-on-log-n)
 7. [Hybrid AI Runtime Contract & Honest Telemetry](#7-hybrid-ai-runtime-contract--honest-telemetry)
 8. [Official Devpost Submission Guide](#8-official-devpost-submission-guide)
 
@@ -62,7 +62,7 @@ Shown by `OnboardingGate` **only on the very first launch** (`has_seen_landing`,
 A fresh install holds a harmless placeholder (`TripState.hasTrip == false`: one member, no expenses, a valid currency), never a null trip. When there is no trip, or only a trip whose start date is in the future (`TripState.hasNoActiveTrip`), Home shows a welcoming placeholder with **Create a New Trip** and **Join Existing Group**, plus a quiet *Upcoming* card with "View trip" when one is scheduled. `ensureTrip` guards the `+` capture button, Add Expense and the Receipt / Slip upload with a "Create or join a trip first" prompt, and `addExpenses` ignores calls without a trip. (The app holds one trip at a time, so "upcoming trips" means that trip.)
 
 ### AI source indicator
-The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1480 ms`, `🟢 On-Device • Gemini Nano`, or `📴 Offline Safety Net • Rule Engine` (only for slip matching; expense capture never uses it).
+The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini • gemini-3.1-flash-lite • 1480 ms`, `🟢 On-Device AI • Gemini Nano` or `🟢 On-Device AI • Apple FM`. If neither answers, a red banner explains why (there is no regex stand-in). Bank-slip cards read `🛡️ Local PII Shield` (on-device masking and matching) or `☁️ Cloud Gemini` (complex foreign receipts).
 
 ### 🏠 Tab 0: Home (`TripHomeScreen`)
 * **Trip Summary Hero Card:** A mint-to-sky card with an animated, tabular total (e.g. `¥56,700`), the live USD conversion (`~$378 USD`), live **Per person** and **Still owed** chips, an always-fresh date range computed from the real expense dates, and a Pocko whose mood reflects the trip (napping when empty, celebrating when everyone is square).
@@ -107,7 +107,7 @@ The capture review shows a subtle badge in plain words: `☁️ Cloud Gemini •
   - Slip-only cards still offer *Link to expense* and *Create expense* (opens the editor, logs it already verified).
   - Every card ends with a compact telemetry badge: `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `(Sim) • 48ms` when the offline engine answered. The collapsible "N private fields masked on-device" panel shows the masked text.
   - `Batch Confirm & Split (N)` verifies every proposed pair; verified slips collapse into a history list.
-* Photos use the multimodal cloud route; when no runtime is reachable the slip is parsed by the deterministic, labelled `Offline Safety Net • Rule Engine` (PII masking is always on-device). Slips are never uploaded to the group, only the matched status of the expense syncs.
+* Photos use the multimodal cloud route; when no runtime is reachable the slip is masked and matched on-device by the `Local PII Shield` (PII masking is always on-device). Slips are never uploaded to the group, only the matched status of the expense syncs.
 
 ### 🍩 Tab 4: Visual Settle (`VisualSettleScreen`)
 * **Interactive Donut Chart (`fl_chart`):** category shares in the *base currency* (mixed-currency trips convert correctly); tap a slice or legend pill to focus it (center shows icon, %, amount).
@@ -335,7 +335,7 @@ To achieve reliable on-device inference with **Gemini Nano**, prompt efficiency 
 * **Output Constraints:** Expected JSON response $< 256 - 512$ tokens for near-instant decoding.
 
 ### Single-Turn Prompt Template ([`lib/services/hybrid_ai/expense_prompt_builder.dart`](../lib/services/hybrid_ai/expense_prompt_builder.dart))
-~430 words (~700 tokens: comfortably inside Gemini Nano's window). The model only extracts **intent**; Dart does the arithmetic (see *Neuro-symbolic pricing* below).
+~530 words (~950 tokens: comfortably inside Gemini Nano's window). The model only extracts **intent**; Dart does the arithmetic (see *Neuro-symbolic pricing* below).
 ```text
 Parse travel expenses into strict JSON. You extract intent; the app does the math.
 
@@ -428,7 +428,7 @@ Every expense created from the capture overlay (voice or typed) stores the exact
 
 ---
 
-## 6. Mathematical Debt Simplification Algorithm ($O(N \log N)$)
+## 6. Mathematical Debt Simplification Algorithm (O(N log N))
 
 When multiple travelers pay for different expenses throughout a trip, the raw settlement graph contains bidirectional debts, cycles, and redundant transactions. Pocko incorporates a greedy settlement algorithm ([`lib/features/settlement/debt_simplifier.dart`](../lib/features/settlement/debt_simplifier.dart)) that guarantees optimal debt cancellation.
 
@@ -504,7 +504,7 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
 1. **"Light Intelligence" Voice Capture:** Simply tap the glowing center `+`, speak (*"Shinkansen tickets 18,200 yen for Alex, Maya, and me, and matcha latte 650 yen for myself"*). Pocko's on-device AI parses amounts, infers currency, tags the best of 12 travel categories, and assigns individual shares in under 100 milliseconds.
 2. **True Hybrid AI Inference:** Runs Gemini Nano (Android AICore / Chrome Built-in AI) and Apple Foundation Models directly on-device. When complex foreign paper receipts or heavy multi-line photos are captured, it automatically falls back to Gemini 3.1 Flash Lite (then 3.8 Flash) in the cloud.
 3. **Smart Slip Matcher (Privacy Shield):** Scans bank notification receipts, masks private bank account numbers locally on-device, and matches them against pending expenses with 1-tap batch approval.
-4. **Greedy Debt Simplification:** Condenses confusing webs of IOUs into the minimum possible transactions ($O(N \log N)$), ensuring at most $N - 1$ transfers settle the entire trip.
+4. **Greedy Debt Simplification:** Condenses confusing webs of IOUs into the minimum possible transactions (O(N log N)), ensuring at most N - 1 transfers settle the entire trip.
 5. **Real-Time 6-Digit Group Sync:** Travelers pair devices effortlessly using a 6-digit Group Code (e.g. `782-901`) with Cloud Firestore offline persistence.
 
 ### ⚙️ How We Built It
@@ -517,17 +517,17 @@ We asked ourselves: **What if logging travel expenses was as fast and natural as
   - **Cloud Firestore:** Configured with `persistenceEnabled: true` for offline-first caching and real-time snapshot listeners.
   - **Firebase Remote Config:** Dynamically updates AI fallback models and prompt overrides over-the-air.
   - **Firebase App Check & Anonymous Auth:** Secure device attestation (reCAPTCHA Enterprise on the web, Play Integrity / DeviceCheck on devices) and instant friction-free onboarding.
-* **Visual Craftsmanship:** Material 3 Expressive design, `Plus Jakarta Sans` tabular typography, and an original vector mascot character rendered in Flutter via `CustomPainter` with 5 interactive mood states.
+* **Visual Craftsmanship:** Material 3 Expressive design, `Plus Jakarta Sans` tabular typography, and an original vector mascot character rendered in Flutter via `CustomPainter` with 6 interactive mood states.
 
 ### 🧗 Challenges We Ran Into
 * **Unifying Three On-Device AI Runtimes:** Android uses AICore/ML Kit, iOS uses Apple Foundation Models, and Chrome uses the W3C Prompt API. We designed a clean unified `MethodChannel` and `dart:js_interop` interface returning consistent telemetry maps across all platforms: `{ rawJson, inferenceSource, latencyMs, modelInfo }`.
-* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 669 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI never shows invented results.
+* **Testing Native Interop Without Test Crashes:** Running `flutter test` on the command line uses the headless Dart VM, which lacks browser window and native OS channels. We solved this with conditional exports (`web_hybrid_ai_bridge.dart` ➔ `_web.dart` on Web vs `_stub.dart` on VM), allowing all 673 automated tests to pass 100% green. Native bridges deliberately return errors instead of mock data, so the UI never shows invented results.
 * **Token Budget Optimization:** Early prompt prototypes occasionally caused on-device LLMs to truncate JSON output. We engineered a compact `<200-word` prompt template that guarantees responses stay under 512 tokens while supporting chained multi-expense sentences.
 
 ### 🏆 Accomplishments We're Proud Of
 * **Fast local inference:** on supported hardware, on-device parsing typically lands in the tens of milliseconds to ~110ms with zero cloud API cost (the telemetry pill shows the real number for every request).
 * **100% Offline Resilience:** You can put your device into Airplane Mode, record multiple expenses in voice or text, and watch Pocko parse, categorize, and calculate balances seamlessly.
-* **100% Green Test Suite:** 669 unit, service, controller and widget tests (46 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
+* **100% Green Test Suite:** 673 unit, service, controller and widget tests (46 suites) verifying debt math with settlements and FX, PII masking, slip matching, prompt parsing, mascot animation, reactive screens and layouts down to 320×568 phones with the keyboard open, up to iPad/desktop widths.
 * **Delightful Emotional Design:** Our animated Pocko character turns bill-splitting from a chore into a joyful travel companion.
 
 ### 📚 What We Learned

@@ -10,7 +10,7 @@
 [![Firebase AI Logic](https://img.shields.io/badge/Firebase%20AI%20Logic-Hybrid%20Inference-FFCA28?logo=firebase&logoColor=black)](#runtime-firebase-ai-logic-verification-for-hackathon-judges)
 [![Flutter 3.x](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Platforms](https://img.shields.io/badge/Platforms-Web%20%7C%20Android%20%7C%20iOS%20%2F%20iPadOS-10B981)](#target-platforms)
-[![Tests Passing](https://img.shields.io/badge/Tests-669%2F669%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-673%2F673%20Passed%20(100%25)-10B981?logo=checkmarx)](#testing--verification)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/%23BuildHybridAI-2026%20Global%20Entry-6366F1)](#)
 
@@ -38,7 +38,7 @@ Whether you are deep inside the Tokyo subway with zero cell service, hiking in t
 ### The 3 Hybrid AI Pillars
 1. **Privacy-First On-Device PII Shield:** card and account digits are masked on the device before any AI sees a slip; only the last four ever sync, and slips never leave the phone.
 2. **Neuro-Symbolic Deterministic Expense Engine + Audit Trail:** the LLM only extracts words; prices, multipliers, splits and totals are computed and checked in code, and every expense keeps the original prompt as an audit trail.
-3. **One Flutter Codebase Bridging 3 Native Hybrid AI Runtimes:** Chrome's built-in Gemini Nano (web), Android AICore Gemini Nano and Apple Foundation Models (iOS / iPadOS), all behind one Firebase AI Logic `PREFER_ON_DEVICE` policy, with Cloud Gemini (`gemini-3.1-flash-lite`, then `gemini-3.8-flash`) and a deterministic rule engine as the fallbacks.
+3. **One Flutter Codebase Bridging 3 Native Hybrid AI Runtimes:** Chrome's built-in Gemini Nano (web), Android AICore Gemini Nano and Apple Foundation Models (iOS / iPadOS), all behind one Firebase AI Logic `PREFER_ON_DEVICE` policy, with Cloud Gemini (`gemini-3.1-flash-lite`, then `gemini-3.8-flash`) as the only fallback (there is no regex stand-in: if neither answers you get an honest error and Try again).
 
 **App Check:** reCAPTCHA Enterprise (web) • Play Integrity (Android) • Apple DeviceCheck (iOS / iPadOS); debug providers only on developer builds and `localhost`.
 
@@ -63,7 +63,7 @@ Whether you are deep inside the Tokyo subway with zero cell service, hiking in t
 1. **3-Second "Light Intelligence" Capture:** Tap the glowing center `+`: the live page stays full-bleed at 1.0x under a clean ~92% dark scrim that fades in across the whole screen (**no blur**, no shrink, no black border, so it stays buttery) while a giant 240 px Pocko zooms in. Speak (it waits **3.5 s of dead air** before auto-confirming) or type naturally (*"Ramen 1 thousand with Alex, Maya and Liam, taxi 2.5k for me"*): spoken multipliers (`thousand`, `thousan`, `k`, `million`, `m`...) become numbers, every mentioned member is picked up, and one **Confirm** starts the analysis while your words shimmer. The sentence returns with tappable item, price **and member-name** highlights; the category pill sits on its own row under it, a live mini expense card previews exactly how the entry will look, and the name-only member pills stay in two-way sync with the highlighted names. A second **Confirm** saves. A subtle **Manual Expense** action opens the standard Add Expense sheet, where Pocko suggests a category after 2.5 s of idle typing.
 2. **100% Offline-First Architecture:** On-device local LLM execution paired with Cloud Firestore offline persistence ensures zero downtime anywhere in the world.
 3. **Smart Slip Matcher (Privacy Shield, "Grade Pocko's work"):** Upload a slip photo or run a curated sample. Card numbers, IBANs, e-mails and holder names are masked on-device *before* any model sees them; plain bank notifications stay on 🟢 local AI while itemized foreign receipts use the ☁️ cloud fallback. Slips never sync to your group. Every logged expense sits side by side with its candidate slip: tap **✓ Correct** or **✕ Wrong** (pick a different slip, add one, or choose *Paid in Cash (No Slip Needed)*). Each card carries a compact telemetry footer such as `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `(Sim) • 48ms`.
-4. **Greedy Debt Simplification ($O(N \log N)$):** Automatically reduces multi-party webs of debt to a maximum of $N - 1$ optimal transfers with 1-click settlement.
+4. **Greedy Debt Simplification (O(N log N)):** Automatically reduces multi-party webs of debt to a maximum of N - 1 optimal transfers with 1-click settlement.
 
 ---
 
@@ -248,17 +248,17 @@ flowchart TD
 | **Cloud Auth** | Firebase Auth | `firebase_auth: ^7.0.1` | Anonymous device authentication |
 | **Security & Verification** | Firebase App Check | `firebase_app_check: ^0.5.1` | Token attestation & reCAPTCHA Enterprise (Fraud Defense) protection |
 | **Dynamic Configuration** | Firebase Remote Config | `firebase_remote_config: ^7.0.1` | Remote AI policy overrides without app updates |
-| **Automated Testing** | Flutter Test | `flutter_test` | 46 test suites (669 tests) covering logic, services, widgets, layouts |
+| **Automated Testing** | Flutter Test | `flutter_test` | 46 test suites (673 tests) covering logic, services, widgets, layouts |
 
 ---
 
 ## 🧪 Testing & Verification
 
-Pocko maintains a **100% pass rate across 46 test suites (669 unit, service and widget tests)**:
+Pocko maintains a **100% pass rate across 46 test suites (673 unit, service and widget tests)**:
 
 ```bash
 flutter analyze   # No issues found!
-flutter test      # 00:08 +669: All tests passed!
+flutter test      # 00:08 +673: All tests passed!
 flutter build web --no-tree-shake-icons   # ✓ Built build/web
 ```
 
