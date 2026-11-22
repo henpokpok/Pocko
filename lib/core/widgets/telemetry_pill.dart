@@ -153,7 +153,7 @@ class TelemetryPill extends StatelessWidget {
 }
 
 /// Compact footer badge shown at the very bottom of Matcher and Expense cards:
-/// `🟢 (Local) • 92ms`, `☁️ (Cloud) • 640ms` or `📴 (Rule Engine) • 92ms` when the
+/// `🟢 (Local) • 92ms` or `☁️ (Cloud) • 640ms` (slip cards: `🛡️ Local PII Shield` / `☁️ Cloud Gemini`); `📴 (Local)` only appears when the
 /// offline engine answered because no live runtime is configured.
 class TelemetryFooter extends StatelessWidget {
   final InferenceSource source;

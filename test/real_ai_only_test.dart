@@ -552,6 +552,16 @@ void main() {
     },
   );
 
+  test(
+    'web bridge: a hung on-device attempt falls straight through to the cloud',
+    () {
+      final js = File('web/firebase_ai_web.js').readAsStringSync();
+      expect(js, contains('onDeviceBrokenUntil'));
+      expect(js, contains('attemptMode = InferenceMode.ONLY_IN_CLOUD'));
+      expect(js, contains('getFirebaseModel(attemptMode, model, maxTokens)'));
+    },
+  );
+
   test('InferenceSource is untouched by the failure path', () {
     expect(InferenceSource.values, contains(InferenceSource.onDevice));
   });

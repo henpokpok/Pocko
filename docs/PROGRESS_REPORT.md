@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **673 / 673 pass** (46 suites) |
+| `flutter test` | **674 / 674 pass** (46 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668 → 669 → 673.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668 → 669 → 673 → 674.
 
 ---
 
@@ -146,7 +146,7 @@ The built web app was run in the browser against the real Firebase project (App 
 - **First-swipe smoothness (iPad Safari / Chrome):** all onboarding pages are built up front (`allowImplicitScrolling` plus a 4-page cache extent and keep-alive), each in its own `RepaintBoundary`; scene tickers run only for the settled, visible page and are paused while swiping. Backdrop blurs (side rail, bottom bar, `GlassCard`), the mascot's blurred ground shadow and the animated mic glow were replaced by plain translucent fills and pre-computed radial gradients, and the hero shadow was reduced to two layers (max blur 24). Plus Jakarta Sans weights are preloaded before the first frame with a 2.5 s timeout (`lib/core/theme/font_prewarm.dart`).
 
 ### Phase 14. Review fixes after the gallery screenshots
-- The badge for the offline rule engine reads `Offline Safety Net • Rule Engine` (footer: `(Rule Engine)`); native on-device results read `On-Device AI • Gemini Nano` / `On-Device AI • Apple FM`, cloud results `Cloud Gemini • <model>`; the word SIM no longer appears anywhere in the UI. Native on-device results read `On-Device AI`.
+- Real AI only: the app never invents answers (a test-only seam keeps the old rule-engine wording); native on-device results read `On-Device AI • Gemini Nano` / `On-Device AI • Apple FM`, cloud results `Cloud Gemini • <model>`; the word SIM no longer appears anywhere in the UI. Native on-device results read `On-Device AI`.
 - The capture scrim is 92% opaque and the nav bar / rail are 94% white with a hairline border (no backdrop blur) so the dashboard behind it no longer bleeds through the highlighted prompt.
 - The Group Net Balance row omits the extra "+ Group Invite" orb for groups of four or more, so nothing clips at 412 px.
 - Cloud models: `gemini-3.1-flash-lite`, then `gemini-3.8-flash`. A live check on the hosted site showed `gemini-2.5-flash` answers 404 ("no longer available to new users, use gemini-3.8-flash"), so it is deliberately not used. README rows that still said 2.5 Flash were corrected.

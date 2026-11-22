@@ -35,7 +35,7 @@ Merchant: TEAMLAB BORDERLESS TOKYO
 Amount: JPY 15,400
 Card: 4929 1823 7701 5521
 Cardholder: Alex Morgan
-Time: 11:42
+Time: 09:05
 Contact: alex.morgan@example.com''',
     ),
     SlipSample(

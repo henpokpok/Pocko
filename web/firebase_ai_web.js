@@ -182,6 +182,9 @@ function ensureAppCheck(app) {
   }
 }
 
+// Until this time (ms epoch) PREFER_ON_DEVICE requests skip the (hung) on-device model.
+let onDeviceBrokenUntil = 0;
+
 let firebaseModelCache = null;
 let firebaseModelKey = "";
 
@@ -318,9 +321,17 @@ window.firebaseAiWeb = {
         const chain = [cloudModel];
         for (const m of [FAST_CLOUD_MODEL, SLOW_CLOUD_MODEL]) if (!chain.includes(m)) chain.push(m);
 
+        // Chrome's built-in AI can hang ("The service is unable to create new session"). When a
+        // PREFER_ON_DEVICE attempt fails, every later attempt (and the next 5 minutes of requests)
+        // goes straight to the cloud model instead of waiting for the device again.
+        let attemptMode =
+          mode === InferenceMode.PREFER_ON_DEVICE && Date.now() < onDeviceBrokenUntil
+            ? InferenceMode.ONLY_IN_CLOUD
+            : mode;
+
         const attempt = (model) =>
           withTimeout(
-            getFirebaseModel(mode, model, maxTokens).generateContent(request),
+            getFirebaseModel(attemptMode, model, maxTokens).generateContent(request),
             attemptTimeout,
             "Firebase AI Logic (" + model + ")",
           );
@@ -342,6 +353,10 @@ window.firebaseAiWeb = {
             break;
           } catch (err) {
             lastErr = err;
+            if (attemptMode === InferenceMode.PREFER_ON_DEVICE) {
+              attemptMode = InferenceMode.ONLY_IN_CLOUD;
+              onDeviceBrokenUntil = Date.now() + 5 * 60 * 1000;
+            }
             console.warn("[Firebase AI Web] " + model + " failed, trying next model:", err && err.message ? err.message : err);
           }
         }
