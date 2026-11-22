@@ -50,10 +50,6 @@ class TravelGazetteer {
     return null;
   }
 
-  /// Whether [text] names a known travel venue or brand at all (used to decide
-  /// if a `MISC` answer from a model deserves a second look).
-  static bool isKnownTravelName(String text) => classify(text) != null;
-
   // ---------------------------------------------------------------------------
   // Venues
   // ---------------------------------------------------------------------------

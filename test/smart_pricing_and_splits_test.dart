@@ -127,7 +127,6 @@ void main() {
         title: 'Ramen',
         unitAmount: 500,
         amountMode: AmountMode.perPerson,
-        currency: 'JPY',
       );
       expect(each.breakdown(3), '¥1,500 (¥500 × 3 each)');
       expect(each.breakdown(2), '¥1,000 (¥500 × 2 each)');
@@ -142,7 +141,6 @@ void main() {
         title: 'Dinner',
         unitAmount: 10000,
         extraPercent: 10,
-        currency: 'JPY',
       );
       expect(pct.breakdown(4), '¥11,000 (¥10,000 + 10%)');
       expect(
@@ -198,7 +196,7 @@ void main() {
     });
 
     test('third-party payers', () {
-      var i = _one('Maya paid 6 thousand yen for taxi with everyone');
+      final i = _one('Maya paid 6 thousand yen for taxi with everyone');
       expect(i['payer'], 'Maya');
       expect(i['amount'], 6000.0);
       expect(i['splitWith'], _members);
@@ -337,7 +335,6 @@ void main() {
       expect(result.hasParsedAmount, isTrue, reason: 'no legacy "amount" key');
       final items = result.toExpenseItems(
         allMemberIds: const ['you', 'alex', 'maya', 'liam'],
-        defaultPayerId: 'you',
         nameToIdMap: const {
           'You': 'you',
           'Alex': 'alex',
@@ -353,7 +350,6 @@ void main() {
     test('the prompt documents the new schema, examples and venue rule', () {
       final p = ExpensePromptBuilder.buildPrompt(
         userInput: 'x 500',
-        memberNames: _members,
       );
       for (final needle in [
         'unitAmount',

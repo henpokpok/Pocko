@@ -168,7 +168,7 @@ void main() {
         await tester.tap(find.byIcon(Icons.add_rounded));
         await settle(tester, 900);
         await tester.tap(find.byIcon(Icons.close_rounded));
-        await settle(tester, 800);
+        await settle(tester);
 
         expect(find.byType(AiExpenseCaptureSheet), findsNothing);
         expect(find.byKey(const ValueKey('capture_page')), findsOneWidget);
@@ -216,7 +216,7 @@ void main() {
         final add = find.widgetWithText(ElevatedButton, 'Add Expense');
         await tester.ensureVisible(add);
         await tester.tap(add);
-        await settle(tester, 800);
+        await settle(tester);
 
         final state = container.read(tripControllerProvider);
         expect(state.trip.expenses.length, before + 1);
@@ -264,7 +264,7 @@ void main() {
                 )
                 .toList(),
           );
-      await settle(tester, 800);
+      await settle(tester);
 
       expect(find.text('¥63,300'), findsOneWidget);
       expect(find.text('Late-night yakitori'), findsOneWidget);

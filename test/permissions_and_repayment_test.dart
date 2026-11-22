@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/core/theme/app_theme.dart';
 import 'package:travmate/features/expenses/expenses_canvas_screen.dart';
 import 'package:travmate/features/squad/squad_setup_screen.dart';
@@ -50,7 +49,6 @@ ExpenseItem _item(String id, {String? by}) => ExpenseItem(
   payerId: 'you',
   splitWithMemberIds: const ['you', 'alex'],
   createdAt: DateTime.now(),
-  inferenceSource: InferenceSource.manual,
   createdByUid: by,
 );
 
@@ -336,7 +334,7 @@ void main() {
         find.text('Akihabara Gachapon & Snacks'),
         const Offset(-500, 0),
       );
-      await settle(tester, 800);
+      await settle(tester);
       expect(find.text(_denied), findsOneWidget);
       expect(find.text('Akihabara Gachapon & Snacks'), findsOneWidget);
       expect(w.state.trip.expenses.any((e) => e.id == 'exp_3'), isTrue);
@@ -351,7 +349,7 @@ void main() {
         uid: 'guest_uid',
       );
       await tester.tap(find.text('Akihabara Gachapon & Snacks'));
-      await settle(tester, 800);
+      await settle(tester);
       expect(find.text(_deniedEdit), findsOneWidget);
       expect(find.text('Save Changes'), findsNothing);
     });
@@ -366,7 +364,7 @@ void main() {
         find.text('Akihabara Gachapon & Snacks'),
         const Offset(-500, 0),
       );
-      await settle(tester, 800);
+      await settle(tester);
       expect(w.state.trip.expenses.any((e) => e.id == 'exp_3'), isFalse);
     });
 

@@ -515,7 +515,6 @@ class _SmartSlipMatcherScreenState
         boxShadow: AppTheme.elevatedCardShadow,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Column(

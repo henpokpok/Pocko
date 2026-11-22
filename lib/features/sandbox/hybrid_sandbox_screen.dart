@@ -175,7 +175,7 @@ class _HybridSandboxScreenState extends ConsumerState<HybridSandboxScreen> {
   Widget _buildTripHeaderCard() {
     final trip = ref.watch(tripControllerProvider);
     final memberListStr = trip.trip.members
-        .map((m) => trip.displayName(m))
+        .map(trip.displayName)
         .join(', ');
     return _card(
       child: Row(

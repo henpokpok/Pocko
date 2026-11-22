@@ -315,7 +315,7 @@ class _CafePainter extends CustomPainter {
 
     // Striped scalloped awning.
     final awningH = h * 0.17;
-    final stripes = 9;
+    const stripes = 9;
     final sw = w / stripes;
     for (var i = 0; i < stripes; i++) {
       final paint = Paint()
@@ -436,9 +436,9 @@ class _SlipMatchSceneState extends State<_SlipMatchScene>
         // The slip docks beside the card so the amount stays readable.
         final dockX = w * (narrow ? 0.58 : 0.51);
         final slipW = w * (narrow ? 0.38 : 0.43);
-        final gap = 10.0;
+        const gap = 10.0;
         final top0 = h * 0.14;
-        final targetIndex = 1;
+        const targetIndex = 1;
         final targetY = top0 + targetIndex * (cardH + gap);
         final pocko = math.min(h * 0.5, 124.0);
 
@@ -458,7 +458,6 @@ class _SlipMatchSceneState extends State<_SlipMatchScene>
 
             return Stack(
               fit: StackFit.expand,
-              clipBehavior: Clip.hardEdge,
               children: [
                 CustomPaint(
                   painter: _LedgerPainter(
@@ -767,7 +766,6 @@ class _PrivacySceneState extends State<_PrivacyScene>
 
             return Stack(
               fit: StackFit.expand,
-              clipBehavior: Clip.hardEdge,
               children: [
                 CustomPaint(painter: _ShieldBackdropPainter(glow)),
                 Positioned(
@@ -840,10 +838,10 @@ class _PrivacySceneState extends State<_PrivacyScene>
                         ),
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.lock_rounded,
                               size: 12,
-                              color: const Color(0xFF6EE7B7),
+                              color: Color(0xFF6EE7B7),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -932,7 +930,7 @@ class _PrivacySceneState extends State<_PrivacyScene>
                 Positioned(
                   left: 0,
                   bottom: 2,
-                  child: PockoMascot(mood: PockoMood.waving, size: pocko),
+                  child: PockoMascot(size: pocko),
                 ),
               ],
             );

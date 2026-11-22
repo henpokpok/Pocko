@@ -412,7 +412,6 @@ class _VisualSettleScreenState extends ConsumerState<VisualSettleScreen> {
                         ),
                         style: AppTheme.tabularNumberStyle(
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
                           color: AppTheme.textSlate,
                         ),
                       ),
@@ -697,7 +696,7 @@ class _VisualSettleScreenState extends ConsumerState<VisualSettleScreen> {
             padding: const EdgeInsets.only(bottom: 14),
             child: OutlinedButton.icon(
               key: const ValueKey('record_repayment_button'),
-              onPressed: () => _recordRepayment(),
+              onPressed: _recordRepayment,
               icon: const Icon(Icons.add_rounded, size: 18),
               label: const Text('Record Repayment'),
               style: OutlinedButton.styleFrom(
@@ -769,8 +768,6 @@ class _VisualSettleScreenState extends ConsumerState<VisualSettleScreen> {
         header,
         const SizedBox(height: 18),
         AdaptiveColumns(
-          leftFlex: 1,
-          rightFlex: 1,
           left: [
             donutCard,
             const SizedBox(height: 18),

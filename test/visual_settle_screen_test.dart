@@ -436,7 +436,7 @@ void main() {
         size: tall,
       );
       container.read(tripControllerProvider.notifier).updateBaseCurrency('USD');
-      await settle(tester, 800);
+      await settle(tester);
       expect(
         find.text('\$48.17'),
         findsWidgets,

@@ -18,7 +18,6 @@ void main() {
       final subUsd = CurrencyHelper.getSecondarySubtitle(
         56700,
         'JPY',
-        target: 'USD',
       );
       expect(subUsd, '~\$378 USD');
 
@@ -26,7 +25,6 @@ void main() {
       final sub4800 = CurrencyHelper.getSecondarySubtitle(
         4800,
         'JPY',
-        target: 'USD',
       );
       expect(sub4800, '~\$32 USD');
 

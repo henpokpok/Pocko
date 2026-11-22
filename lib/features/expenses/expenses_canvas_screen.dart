@@ -128,7 +128,6 @@ class ExpensesCanvasScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -153,7 +152,6 @@ class ExpensesCanvasScreen extends ConsumerWidget {
                         style: AppTheme.tabularNumberStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
-                          color: AppTheme.textDark,
                         ),
                       ),
                     ),
@@ -243,7 +241,6 @@ class ExpensesCanvasScreen extends ConsumerWidget {
     Widget feed;
     if (trip.expenses.isEmpty) {
       feed = PockoEmptyState(
-        mood: PockoMood.sleepy,
         title: 'No expenses yet',
         message: 'Tap the glowing + to say or type what you spent. Pocko will split it for you.',
         actionLabel: 'Log first expense',
@@ -530,7 +527,6 @@ class _ExpenseCard extends StatelessWidget {
                           style: AppTheme.tabularNumberStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w900,
-                            color: AppTheme.textDark,
                           ),
                         ),
                         if (secondary != null)
@@ -560,7 +556,6 @@ class _ExpenseCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTheme.tabularNumberStyle(
                           fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
                           color: AppTheme.textSlate,
                         ),
                       ),
@@ -793,7 +788,6 @@ class _DateFilterStrip extends ConsumerWidget {
                 style: AppTheme.tabularNumberStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textDark,
                 ),
               ),
             ],

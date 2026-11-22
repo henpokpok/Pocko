@@ -74,7 +74,7 @@ void main() {
       await tester.pump();
       await tester.ensureVisible(find.text('Process with Hybrid AI'));
       await tester.tap(find.text('Process with Hybrid AI'));
-      await settle(tester, 800);
+      await settle(tester);
 
       // The test engine is the offline simulation, so the badge must say so (and never SIM).
       expect(find.text('📴 Offline Safety Net • Rule Engine'), findsOneWidget);

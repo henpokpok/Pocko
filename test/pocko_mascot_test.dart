@@ -12,8 +12,6 @@ void main() {
           home: Scaffold(
             body: Center(
               child: PockoMascot(
-                mood: PockoMood.waving,
-                size: 80,
                 animate: false,
               ),
             ),

@@ -27,9 +27,7 @@ void main() {
       () {
         final prompt = ExpensePromptBuilder.buildPrompt(
           userInput: 'coffee 450',
-          tripCurrency: 'JPY',
           memberNames: ['You', 'Alex'],
-          defaultPayer: 'You',
           templateOverride: 'Parse {{userInput}} in {{tripCurrency}} for [{{members}}] paid by {{defaultPayer}}',
         );
         expect(prompt, 'Parse coffee 450 in JPY for [You, Alex] paid by You');

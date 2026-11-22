@@ -260,8 +260,8 @@ Pocko implements Google's **Material 3 Expressive** design language, emphasizing
 
 ### Depth, Glass & Motion
 * **Layered elevation:** `AppTheme.elevatedCardShadow` (ambient + key + contact shadow) for hero cards and the nav; `AppTheme.surfaceDecoration()` for hairline white cards.
-* **No blur anywhere:** the nav shell and `GlassCard` use crisp 94% white surfaces with a hairline border (no `BackdropFilter`, `MaskFilter` or `ImageFilter` in `lib/`, enforced by a test); glows are pre-computed `RadialGradient`s and shadow blurs stay at 24 or below. This keeps iPad Retina WebGL frame times low.
-* **Shared components** (`lib/core/widgets/`): `TelemetryPill`, `Tactile` (spring press + haptic), `AnimatedAmount` (count-up with tabular figures), `PockoEmptyState`, `GlassCard`, `AdaptiveColumns` / `TabScrollBody` (single column on phones, balanced two columns at `>= 768`), `pocko_snack` helpers.
+* **No blur anywhere:** the nav shell and cards use crisp 94% white surfaces with a hairline border (no `BackdropFilter`, `MaskFilter` or `ImageFilter` in `lib/`, enforced by a test); glows are pre-computed `RadialGradient`s and shadow blurs stay at 24 or below. This keeps iPad Retina WebGL frame times low.
+* **Shared components** (`lib/core/widgets/`): `TelemetryPill`, `Tactile` (spring press + haptic), `AnimatedAmount` (count-up with tabular figures), `PockoEmptyState`, `AdaptiveColumns` / `TabScrollBody` (single column on phones, balanced two columns at `>= 768`), `pocko_snack` helpers.
 * **Motion:** staggered `flutter_animate` entrances (timeline delays, so no pending timers), a cross-fading tab switcher, animated rings/bars, `AnimatedSwitcher` step transitions in the capture overlay.
 
 ### Typography

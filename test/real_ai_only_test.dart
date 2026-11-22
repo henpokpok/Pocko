@@ -438,7 +438,7 @@ void main() {
         stt.error('error_language_unavailable', permanent: true);
         await settle(tester, 400);
         stt.sessionEnds(); // the recognizer's own "done" must not restart it
-        await settle(tester, 800);
+        await settle(tester);
 
         expect(stt.listenCalls, 1, reason: 'no restart loop');
         expect(

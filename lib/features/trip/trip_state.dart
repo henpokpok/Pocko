@@ -122,11 +122,9 @@ class TripState {
         id: 'no_trip',
         name: '',
         baseCurrency: 'USD',
-        homeCurrency: 'USD',
         members: const [
           TripMember(id: 'you', name: 'You', isCurrentUser: true),
         ],
-        expenses: const [],
         createdAt: now,
         startDate: DateTime(now.year, now.month, now.day),
       ),
@@ -283,7 +281,6 @@ class TripState {
         payerId: 'you',
         splitWithMemberIds: const ['you'],
         createdAt: anchor.subtract(const Duration(days: 12, hours: 3)),
-        inferenceSource: InferenceSource.manual,
         slipStatus: SlipStatus.matched,
       ),
       ExpenseItem(
@@ -326,7 +323,6 @@ class TripState {
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 85,
-        slipStatus: SlipStatus.waitingForSlip,
       ),
       ExpenseItem(
         id: 'exp_4',
@@ -340,7 +336,6 @@ class TripState {
         inferenceSource: InferenceSource.inCloud,
         modelInfo: 'Gemini Flash (seed data)',
         latencyMs: 480,
-        slipStatus: SlipStatus.waitingForSlip,
       ),
       ExpenseItem(
         id: 'exp_5',
@@ -354,7 +349,6 @@ class TripState {
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 98,
-        slipStatus: SlipStatus.waitingForSlip,
       ),
       ExpenseItem(
         id: 'exp_6',
@@ -368,7 +362,6 @@ class TripState {
         inferenceSource: InferenceSource.onDevice,
         modelInfo: 'Gemini Nano (seed data)',
         latencyMs: 104,
-        slipStatus: SlipStatus.waitingForSlip,
       ),
     ];
 
@@ -392,7 +385,6 @@ class TripState {
         bankName: 'Travel Card',
         maskedAccount: '•••• 4829',
         amount: 3500,
-        currency: 'JPY',
         time: '14:22',
         merchant: 'Akihabara Gachapon',
         targetExpenseId: 'exp_3',
@@ -408,7 +400,6 @@ class TripState {
         bankName: 'Credit Card',
         maskedAccount: '•••• 1104',
         amount: 8800,
-        currency: 'JPY',
         time: '16:05',
         merchant: 'Shibuya Sky',
         targetExpenseId: 'exp_4',
@@ -425,7 +416,6 @@ class TripState {
         bankName: 'Mobile Pay • Transit Card',
         maskedAccount: '•••• 9021',
         amount: 18200,
-        currency: 'JPY',
         time: '18:40',
         merchant: 'Shinkansen Ticket',
         targetExpenseId: 'exp_6',

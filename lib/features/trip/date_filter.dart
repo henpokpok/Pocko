@@ -14,8 +14,6 @@ class DateFilter {
   const DateFilter.preTrip() : kind = DateFilterKind.preTrip, day = null;
   DateFilter.day(DateTime d) : kind = DateFilterKind.day, day = startOfDay(d);
 
-  bool get isAll => kind == DateFilterKind.all;
-
   bool matches(ExpenseItem e, DateTime tripStart) {
     final tripDay = startOfDay(tripStart);
     switch (kind) {

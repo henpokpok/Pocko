@@ -25,7 +25,6 @@ Future<T?> showPockoBottomSheet<T>({
     context: context,
     useRootNavigator: useRootNavigator,
     isScrollControlled: true,
-    enableDrag: true,
     showDragHandle: true,
     useSafeArea: true,
     backgroundColor: Colors.white,

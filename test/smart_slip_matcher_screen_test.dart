@@ -320,7 +320,7 @@ void main() {
       expect(find.text('Edit Details & Splits'), findsOneWidget);
       await tester.ensureVisible(find.text('Save Changes'));
       await tester.tap(find.text('Save Changes'));
-      await settle(tester, 800);
+      await settle(tester);
 
       final state = container.read(tripControllerProvider);
       expect(state.trip.expenses.length, before + 1);

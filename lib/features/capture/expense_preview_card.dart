@@ -126,7 +126,6 @@ class ExpensePreviewCard extends StatelessWidget {
                     style: AppTheme.tabularNumberStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
-                      color: AppTheme.textDark,
                     ),
                   ),
                   Text(
@@ -226,7 +225,6 @@ class ExpensePreviewCard extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 6,
-              alignment: WrapAlignment.start,
               children: actions,
             ),
           ],

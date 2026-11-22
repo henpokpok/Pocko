@@ -436,7 +436,7 @@ void main() {
         expect(find.byKey(const ValueKey('clear_transcript')), findsNothing);
         await _startMic(tester);
         engine.say('Eat ramen with Maya', isFinal: true);
-        await settle(tester, 800); // the chip grows in
+        await settle(tester); // the chip grows in
         expect(find.byKey(const ValueKey('clear_transcript')), findsOneWidget);
 
         await tester.ensureVisible(
@@ -516,7 +516,7 @@ void main() {
         reason: 'the ring really does grow beyond the orb',
       );
       engine.say('Ramen 1200', isFinal: true);
-      await settle(tester, 800);
+      await settle(tester);
       expect(rect('mic_orb').size, orbBefore.size);
       await settle(tester, 4500);
     });

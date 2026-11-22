@@ -287,7 +287,6 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                     boxShadow: AppTheme.elevatedCardShadow,
                   ),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Column(
@@ -381,7 +380,6 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                       ),
                       const SizedBox(width: 12),
                       PockoMascot(
-                        mood: PockoMood.waving,
                         size: PockoSizes.header(context),
                       ),
                     ],
@@ -869,7 +867,7 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                 // Start over: guided wizard or the pre-loaded Tokyo demo.
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: AppTheme.surfaceDecoration(radius: 24),
+                  decoration: AppTheme.surfaceDecoration(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

@@ -85,7 +85,7 @@ void main() {
       await open(tester, contentHeight: 200);
       expect(find.byType(BottomSheet), findsOneWidget);
       await tester.drag(find.byType(BottomSheet), const Offset(0, 500));
-      await settle(tester, 800);
+      await settle(tester);
       expect(find.byType(BottomSheet), findsNothing);
     });
 

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/enums/expense_category.dart';
-import '../../core/enums/inference_source.dart';
 import '../../core/widgets/pocko_snack.dart';
 import '../../models/expense_item.dart';
 import '../trip/require_trip.dart';
@@ -20,11 +18,9 @@ Future<void> addManualExpense(BuildContext context, WidgetRef ref) async {
     title: '',
     amount: 0,
     currency: tripState.trip.baseCurrency,
-    category: ExpenseCategory.MISC,
     payerId: tripState.currentMemberId,
     splitWithMemberIds: tripState.trip.members.map((m) => m.id).toList(),
     createdAt: DateTime.now(),
-    inferenceSource: InferenceSource.manual,
   );
   final result = await showExpenseEditor(
     context,

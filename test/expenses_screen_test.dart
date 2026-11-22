@@ -242,7 +242,7 @@ void main() {
       await tester.pump();
       await tester.ensureVisible(find.text('Save Changes'));
       await tester.tap(find.text('Save Changes'));
-      await settle(tester, 800);
+      await settle(tester);
 
       final state = container.read(tripControllerProvider);
       expect(
@@ -289,7 +289,7 @@ void main() {
 
       await tester.ensureVisible(find.text('Save Changes'));
       await tester.tap(find.text('Save Changes'));
-      await settle(tester, 800);
+      await settle(tester);
 
       final state = container.read(tripControllerProvider);
       final e = state.trip.expenses.firstWhere((x) => x.id == 'exp_6');

@@ -599,13 +599,11 @@ class TripController extends Notifier<TripState> {
         baseCurrency: currency.toUpperCase(),
         homeCurrency: homeCurrency.toUpperCase(),
         members: members,
-        expenses: const [],
         createdAt: now,
         startDate: DateTime(now.year, now.month, now.day),
         hostUid: _uid,
       ),
       squadCode: code,
-      currentMemberId: 'you',
       syncStatus: state.syncStatus,
     );
     state = _withCalculatedBalances(next);
@@ -1005,7 +1003,7 @@ class TripController extends Notifier<TripState> {
           hasTrip: true,
         ),
       );
-      if (wanted.isNotEmpty) store?.setDisplayName(myName);
+      if (wanted.isNotEmpty) unawaited(store?.setDisplayName(myName));
       _listenToSync(cleanCode);
       _pushSync();
       return JoinSquadResult.joined;

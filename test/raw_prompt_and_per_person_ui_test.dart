@@ -369,7 +369,6 @@ void main() {
                   payerId: 'you',
                   splitWithMemberIds: const ['you'],
                   createdAt: DateTime.now(),
-                  inferenceSource: InferenceSource.manual,
                 ),
               ),
               child: const Text('Open editor'),

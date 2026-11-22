@@ -97,7 +97,7 @@ void main() {
     testWidgets('Skip jumps straight to the setup card', (tester) async {
       await _pumpOnboarding(tester);
       await tester.tap(_key('skip_button'));
-      await settle(tester, 800);
+      await settle(tester);
       expect(_key('first_trip_setup_card'), findsOneWidget);
       expect(find.text('Set up your first trip'), findsOneWidget);
     });
@@ -108,7 +108,7 @@ void main() {
       await _pumpOnboarding(tester);
       expect(_key('demo_trip_button'), findsOneWidget);
       await tester.tap(_key('skip_button'));
-      await settle(tester, 800);
+      await settle(tester);
       expect(_key('demo_trip_button'), findsOneWidget);
       expect(find.text('Try Tokyo Demo Trip'), findsOneWidget);
     });
@@ -296,7 +296,7 @@ void main() {
           scaffold: false,
         );
         await tester.tap(_key('skip_button'));
-        await settle(tester, 800);
+        await settle(tester);
         await tester.enterText(_key('trip_name_field'), 'Seoul Autumn Trip');
         await _pick(tester, 'destination_selector', 'South Korea (₩ KRW)');
         await tester.ensureVisible(_key('start_trip_button'));
@@ -340,7 +340,7 @@ void main() {
           size: const Size(390, 1000),
         );
         await tester.tap(find.textContaining('Edit Group'));
-        await settle(tester, 800);
+        await settle(tester);
 
         await tester.ensureVisible(_key('new_trip_wizard_button'));
         expect(find.text('New Trip / Setup Wizard'), findsOneWidget);

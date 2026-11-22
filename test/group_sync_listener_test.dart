@@ -21,6 +21,7 @@ class _FakeSync extends SquadSyncService {
   @override
   Stream<TripStateUpdate?> streamTripUpdates(String squadCode) {
     subscribed.add(squadCode);
+    // ignore: close_sinks (closed by the test via `controllers`)
     final c = StreamController<TripStateUpdate?>.broadcast();
     controllers[squadCode] = c;
     return c.stream;

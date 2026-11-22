@@ -106,7 +106,6 @@ class PlatformSpeechEngine implements SpeechEngine {
       listenOptions: stt.SpeechListenOptions(
         localeId: locale,
         onDevice: _onDevice,
-        partialResults: true,
         listenMode: stt.ListenMode.dictation,
         pauseFor: const Duration(seconds: 4),
         listenFor: const Duration(seconds: 45),

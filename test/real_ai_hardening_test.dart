@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/enums/expense_category.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/core/theme/app_theme.dart';
 import 'package:travmate/features/expenses/expense_editor_sheet.dart';
 import 'package:travmate/features/trip/trip_controller.dart';
@@ -346,11 +345,9 @@ void main() {
                         title: '',
                         amount: 0,
                         currency: 'JPY',
-                        category: ExpenseCategory.MISC,
                         payerId: 'you',
                         splitWithMemberIds: const ['you'],
                         createdAt: DateTime.now(),
-                        inferenceSource: InferenceSource.manual,
                       ),
                     ),
                     child: const Text('Open editor'),

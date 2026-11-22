@@ -264,7 +264,6 @@ void main() {
       final p = ExpensePromptBuilder.buildAudioPrompt(
         tripCurrency: 'THB',
         memberNames: const ['You', 'Ploy'],
-        defaultPayer: 'You',
       );
       expect(p, contains('"transcript": "exact words spoken"'));
       expect(p, contains('"items"'));
@@ -560,7 +559,7 @@ void main() {
       await _pump(tester, ai, rec);
       await _tapMic(tester);
       await tester.tap(find.byIcon(Icons.stop_rounded).last);
-      await settle(tester, 800);
+      await settle(tester);
       expect(ai.audioCalls, 0);
       expect(find.textContaining('did not hear anything'), findsOneWidget);
     });
@@ -568,7 +567,7 @@ void main() {
     testWidgets(
       'when Gemini fails online: a red banner with the reason, and Try again re-sends the SAME recording (no STT downgrade)',
       (tester) async {
-        final ai = FakeAudioAi(reply: null);
+        final ai = FakeAudioAi();
         final rec = FakeRecorder();
         final stt = FakeSpeechEngine();
         await _pump(tester, ai, rec, stt: stt);

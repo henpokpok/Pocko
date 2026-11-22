@@ -112,7 +112,7 @@ class SlipMatcher {
 
     final percent = bestScore.clamp(0, 100);
     if (best == null || percent < minimumConfidence) {
-      return SlipMatchResult(expense: null, percent: percent);
+      return SlipMatchResult(percent: percent);
     }
     return SlipMatchResult(expense: best, percent: percent);
   }

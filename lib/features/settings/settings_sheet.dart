@@ -180,7 +180,6 @@ class _SettingsBody extends ConsumerWidget {
           const OnDeviceAiTile(),
           const SizedBox(height: 22),
           Align(
-            alignment: Alignment.center,
             child: TextButton.icon(
               key: const ValueKey('settings_replay_landing'),
               onPressed: () {

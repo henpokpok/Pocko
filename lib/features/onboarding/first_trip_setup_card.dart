@@ -249,7 +249,7 @@ class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
                 ),
                 label: const Text('You'),
                 backgroundColor: AppTheme.primaryEmeraldLight,
-                shape: const StadiumBorder(side: BorderSide.none),
+                shape: const StadiumBorder(),
                 labelStyle: GoogleFonts.plusJakartaSans(
                   fontWeight: FontWeight.w800,
                   fontSize: 13,
@@ -263,7 +263,7 @@ class _FirstTripSetupCardState extends State<FirstTripSetupCard> {
                   onDeleted: () => setState(() => _friends.remove(f)),
                   deleteIcon: const Icon(Icons.close_rounded, size: 16),
                   backgroundColor: const Color(0xFFF1F5F9),
-                  shape: const StadiumBorder(side: BorderSide.none),
+                  shape: const StadiumBorder(),
                   labelStyle: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,

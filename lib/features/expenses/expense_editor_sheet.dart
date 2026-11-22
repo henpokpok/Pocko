@@ -231,7 +231,7 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
       _error = null;
       if (on) {
         _split.add(id);
-        _customCtrls.putIfAbsent(id, () => TextEditingController());
+        _customCtrls.putIfAbsent(id, TextEditingController.new);
       } else {
         _split.remove(id);
       }
@@ -355,7 +355,6 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
             const PockoMascot(
               size: 22,
               animate: false,
-              enableEntranceAnimation: false,
             ),
             const SizedBox(width: 4),
             Flexible(
@@ -594,7 +593,7 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              style: AppTheme.tabularNumberStyle(fontSize: 16),
+              style: AppTheme.tabularNumberStyle(),
               decoration: InputDecoration(
                 labelText: 'Amount',
                 helperText: _custom
@@ -623,7 +622,7 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
                     onSelected: (v) => setState(() => _currency = v),
                   ),
                 ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 0),
+                prefixIconConstraints: const BoxConstraints(),
               ),
               onChanged: (_) => setState(() => _error = null),
             ),
@@ -743,7 +742,7 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
                         _split.add(m.id);
                         _customCtrls.putIfAbsent(
                           m.id,
-                          () => TextEditingController(),
+                          TextEditingController.new,
                         );
                       }
                     }
@@ -828,7 +827,6 @@ class _ExpenseEditorState extends State<_ExpenseEditor> {
                         key: const ValueKey('split_summary'),
                         style: AppTheme.tabularNumberStyle(
                           fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
                           color: AppTheme.primaryEmeraldDark,
                         ),
                       ),

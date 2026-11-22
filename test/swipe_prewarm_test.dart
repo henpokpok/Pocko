@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/theme/font_prewarm.dart';
@@ -99,7 +98,6 @@ void main() {
       await pumpLanding(tester);
       final gesture = await tester.startGesture(
         tester.getCenter(find.byKey(const ValueKey('onboarding_pages'))),
-        kind: PointerDeviceKind.touch,
       );
       await gesture.moveBy(const Offset(-120, 0));
       await tester.pump(const Duration(milliseconds: 50));

@@ -74,7 +74,6 @@ class PlatformVoiceRecorder implements VoiceRecorder {
           '${Directory.systemTemp.path}/pocko_voice_${DateTime.now().microsecondsSinceEpoch}.m4a';
       await _recorder.start(
         const RecordConfig(
-          encoder: AudioEncoder.aacLc,
           sampleRate: _sampleRate,
           numChannels: 1,
           bitRate: 64000,

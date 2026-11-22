@@ -89,7 +89,6 @@ void main() {
     ) async {
       await _pump(
         tester,
-        size: const Size(390, 844),
         keyboard: 300,
         scaffold: false,
       );
@@ -148,7 +147,7 @@ void main() {
         expect(mask.blendMode, BlendMode.srcIn);
 
         // The sweep moves: the shader callback yields different shaders over time.
-        final b = const Rect.fromLTWH(0, 0, 300, 40);
+        const b = Rect.fromLTWH(0, 0, 300, 40);
         final s1 = mask.shaderCallback(b);
         await tester.pump(const Duration(milliseconds: 400));
         final mask2 = tester.widget<ShaderMask>(
@@ -478,7 +477,7 @@ void main() {
       final container = await _pump(tester, size: const Size(390, 1000));
       await _toReview(tester);
       await tester.tap(find.byKey(const ValueKey('pill_amount_0')));
-      await settle(tester, 800);
+      await settle(tester);
       expect(find.byKey(const ValueKey('inline_editor')), findsOneWidget);
       await tester.enterText(
         find.byKey(const ValueKey('inline_edit_field')),
@@ -506,7 +505,7 @@ void main() {
       await settle(tester, 400);
       expect(find.byKey(const ValueKey('inline_edit_field')), findsNothing);
       await tester.tap(find.byKey(const ValueKey('pill_amount_1')));
-      await settle(tester, 800);
+      await settle(tester);
       await tester.enterText(
         find.byKey(const ValueKey('inline_edit_field')),
         '0',
@@ -514,12 +513,12 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('inline_edit_save')));
       await settle(tester, 300);
       expect(find.text('Enter a price greater than zero.'), findsOneWidget);
-      await settle(tester, 800);
+      await settle(tester);
       await tester.tap(find.byTooltip('Cancel'));
       await settle(tester, 300);
 
       await tester.tap(find.byKey(const ValueKey('pill_title_1')));
-      await settle(tester, 800);
+      await settle(tester);
       await tester.enterText(
         find.byKey(const ValueKey('inline_edit_field')),
         'Bullet train',

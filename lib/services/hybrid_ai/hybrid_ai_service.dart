@@ -163,7 +163,7 @@ class HybridAiResult {
       final list = data['items'] as List;
       return list
           .whereType<Map>()
-          .map((m) => Map<String, dynamic>.from(m))
+          .map(Map<String, dynamic>.from)
           .toList();
     }
 
@@ -250,7 +250,6 @@ class HybridAiResult {
           title: 'Expense',
           amount: 0.0,
           currency: defaultCurrency,
-          category: ExpenseCategory.MISC,
           payerId: defaultPayerId,
           splitWithMemberIds: allMemberIds,
           createdAt: DateTime.now(),

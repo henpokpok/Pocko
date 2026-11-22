@@ -301,7 +301,6 @@ void main() {
     test('anchors, suffix cues and the venue-vs-item rule', () {
       final p = ExpensePromptBuilder.buildPrompt(
         userInput: 'x 1',
-        memberNames: _members,
       );
       for (final needle in [
         'Disneyland',

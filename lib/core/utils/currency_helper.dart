@@ -56,15 +56,6 @@ class CurrencyHelper {
     'HKD': 1.0 / 7.8,
   };
 
-  /// Legacy map to THB for backward compatibility
-  static const Map<String, double> ratesToThb = {
-    'THB': 1.0,
-    'JPY': 0.232,
-    'USD': 35.5,
-    'EUR': 38.5,
-    'KRW': 0.026,
-  };
-
   static String symbol(String currency) {
     return currencySymbols[currency.toUpperCase()] ??
         '${currency.toUpperCase()} ';
@@ -82,9 +73,6 @@ class CurrencyHelper {
     if (fromRate == null || toRate == null) return amount;
     return amount * fromRate / toRate;
   }
-
-  static bool isKnown(String currency) =>
-      ratesToUsd.containsKey(currency.toUpperCase());
 
   static String formatAmount(
     double amount,

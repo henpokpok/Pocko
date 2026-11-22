@@ -64,7 +64,6 @@ class PlaceholderHome extends ConsumerWidget {
                   child: Column(
                     children: [
                       PockoMascot(
-                        mood: PockoMood.waving,
                         size: PockoSizes.hero(context),
                       ),
                       const SizedBox(height: 14),
@@ -148,7 +147,7 @@ class PlaceholderHome extends ConsumerWidget {
                   Container(
                     key: const ValueKey('upcoming_trip_card'),
                     padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
-                    decoration: AppTheme.surfaceDecoration(radius: 24),
+                    decoration: AppTheme.surfaceDecoration(),
                     child: Row(
                       children: [
                         Container(

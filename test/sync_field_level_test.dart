@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/features/trip/trip_state.dart';
 import 'package:travmate/models/expense_item.dart';
 import 'package:travmate/models/settlement_payment.dart';
@@ -45,7 +44,6 @@ ExpenseItem _exp(String id, {double amount = 1000, String title = 'Item'}) =>
       splitWithMemberIds: const ['you', 'maya'],
       customSplits: id == 'e_custom' ? {'you': 400.0, 'maya': 600.0} : null,
       createdAt: DateTime(2026, 11, 16, 12),
-      inferenceSource: InferenceSource.manual,
     );
 
 final TripState _base = TripState.initial(squadCode: '123-456');

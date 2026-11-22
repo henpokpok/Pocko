@@ -1856,7 +1856,6 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
                 '${_items.length} expense${_items.length == 1 ? '' : 's'} • ${CurrencyHelper.formatAmount(total, base)} total',
                 style: AppTheme.tabularNumberStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
                   color: Colors.white.withValues(alpha: 0.75),
                 ),
               ),
@@ -2038,7 +2037,7 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
                 duration: const Duration(milliseconds: 200),
                 width: size,
                 height: size,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: AppTheme.emeraldShineGradient,
                   shape: BoxShape.circle,
                 ),

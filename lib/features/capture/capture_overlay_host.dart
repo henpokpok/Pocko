@@ -89,8 +89,8 @@ class _CaptureOverlayHostState extends State<CaptureOverlayHost> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    ColoredBox(
-                      key: const ValueKey('capture_scrim'),
+                    const ColoredBox(
+                      key: ValueKey('capture_scrim'),
                       color: CaptureOverlayHost.scrimColor,
                     ),
                     widget.overlayBuilder(context),

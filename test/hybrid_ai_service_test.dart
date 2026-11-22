@@ -20,9 +20,6 @@ void main() {
       final result = await _service().parseExpenseText(
         text: 'Ichiran ramen 4800 Alex paid, split Maya and Liam',
         mode: InferenceMode.preferOnDevice,
-        tripCurrency: 'JPY',
-        memberNames: members,
-        defaultPayer: 'You',
       );
 
       expect(result.inferenceSource, InferenceSource.onDevice);
@@ -42,8 +39,6 @@ void main() {
 
       final expense = result.toExpenseItem(
         id: 'test_exp',
-        defaultCurrency: 'JPY',
-        defaultPayerId: 'you',
         allMemberIds: ids.values.toList(),
         nameToIdMap: ids,
       );
@@ -56,7 +51,6 @@ void main() {
       final result = await _service().parseExpenseText(
         text: 'Starbucks matcha latte 650 Maya paid for herself',
         mode: InferenceMode.onlyInCloud,
-        memberNames: members,
       );
 
       expect(result.inferenceSource, InferenceSource.inCloud);
@@ -74,9 +68,6 @@ void main() {
         final result = await _service().parseExpenseText(
           text: 'Ramen 4800 split 4 ways, and Shinkansen tickets 18200 for Alex, Maya, and me',
           mode: InferenceMode.preferOnDevice,
-          tripCurrency: 'JPY',
-          memberNames: members,
-          defaultPayer: 'You',
         );
 
         expect(result.items.length, 2);
@@ -90,8 +81,6 @@ void main() {
         );
 
         final expenses = result.toExpenseItems(
-          defaultCurrency: 'JPY',
-          defaultPayerId: 'you',
           allMemberIds: ids.values.toList(),
           nameToIdMap: ids,
         );
@@ -107,7 +96,6 @@ void main() {
       final result = await _service().parseExpenseText(
         text: 'Ramen 1200; coffee 450; museum ticket 2000; taxi 1800 and souvenirs 3000',
         mode: InferenceMode.preferOnDevice,
-        memberNames: members,
       );
       expect(result.items.length, 5);
       expect(result.items.map((i) => i['amount']), [
@@ -130,8 +118,6 @@ void main() {
       final result = await _service().parseExpenseText(
         text: 'Dinner 85 euro Alex paid, split everyone; hotel \$1,200',
         mode: InferenceMode.preferOnDevice,
-        tripCurrency: 'JPY',
-        memberNames: members,
       );
       expect(result.items[0]['currency'], 'EUR');
       expect(result.items[0]['amount'], 85.0);
@@ -143,7 +129,6 @@ void main() {
     test('Text without an amount reports no parsed amount', () async {
       final result = await _service().parseExpenseText(
         text: 'hello pocko',
-        memberNames: members,
       );
       expect(result.hasParsedAmount, isFalse);
     });
@@ -151,7 +136,6 @@ void main() {
     test('Output contains no non-English text', () async {
       final result = await _service().parseExpenseText(
         text: 'dinner 5000',
-        memberNames: members,
       );
       expect(
         result.rawJson.runes.any((r) => r >= 0x0E00 && r <= 0x0E7F),
@@ -185,7 +169,6 @@ void main() {
         );
         final result = await service.parseExpenseText(
           text: 'coffee 450',
-          memberNames: members,
         );
         expect(result.inferenceSource, InferenceSource.inCloud);
       },
@@ -227,7 +210,6 @@ Croque monsieur        18,50
 Onion soup             12,00
 Espresso 3x            10,50
 TOTAL EUR              41,00''',
-        tripCurrency: 'JPY',
         forceCloud: true,
       );
       final receipt = result.receipt!;

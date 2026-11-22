@@ -26,9 +26,6 @@ class TripPermissions {
 
   bool get isGuest => !isLegacy && !isHost;
 
-  /// Whether entries can be edited / deleted by this person at all right now.
-  bool get guestsLocked => trip.lockGuestEdits;
-
   /// May this person edit or delete an entry created by [createdByUid]?
   bool canModify(String? createdByUid) {
     if (isLegacy || isHost) return true;

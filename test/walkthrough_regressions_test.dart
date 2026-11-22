@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/enums/expense_category.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/core/utils/currency_helper.dart';
 import 'package:travmate/core/widgets/photo_attachment_field.dart';
 import 'package:travmate/features/expenses/expenses_canvas_screen.dart';
@@ -142,7 +141,6 @@ void main() {
           payerId: 'you',
           splitWithMemberIds: ['you', maya],
           createdAt: DateTime.now(),
-          inferenceSource: InferenceSource.manual,
         ),
       );
       await tester.tap(find.text('open'));

@@ -81,7 +81,6 @@ class PockoValuePill extends StatelessWidget {
                   style: AppTheme.tabularNumberStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textDark,
                   ),
                 ),
               ),

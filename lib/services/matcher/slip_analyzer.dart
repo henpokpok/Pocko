@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/enums/inference_source.dart';
 import '../../models/bank_slip.dart';
 import '../../models/expense_item.dart';
 import '../hybrid_ai/hybrid_ai_service.dart';
@@ -232,7 +231,4 @@ Time: 21:40''',
 
     return SlipAnalysis(slip: slip, ai: result, masked: masked);
   }
-
-  /// Convenience for UI: telemetry source of the slip.
-  static InferenceSource sourceOf(BankSlip slip) => slip.inferenceSource;
 }

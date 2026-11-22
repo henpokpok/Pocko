@@ -41,10 +41,9 @@ class _FakeSync extends SquadSyncService {
 }
 
 TripStateUpdate _remoteGroup() {
-  final base = TripState.initial(squadCode: '782-901');
+  final base = TripState.initial();
   return TripStateUpdate(
     trip: base.trip.copyWith(hostUid: 'host_uid'),
-    settlements: const [],
     writerId: 'host',
   );
 }
@@ -114,7 +113,6 @@ void main() {
             splitWithMemberIds: const ['you', 'alex', 'maya'],
             customSplits: const {'you': 1200.0, 'alex': 950.0, 'maya': 1800.0},
             createdAt: DateTime.now(),
-            inferenceSource: InferenceSource.manual,
           ),
         );
         n.recordRepayment(
@@ -245,7 +243,7 @@ void main() {
       final ai = _SpyAi();
       final container = await pumpPocko(
         tester,
-        AiExpenseCaptureSheet(enableSpeechRecognition: false),
+        const AiExpenseCaptureSheet(enableSpeechRecognition: false),
         size: const Size(390, 1100),
         ai: ai,
       );
@@ -425,7 +423,6 @@ void main() {
                 payerId: 'you',
                 splitWithMemberIds: const ['you'],
                 createdAt: DateTime.now(),
-                inferenceSource: InferenceSource.manual,
               ),
             );
         expect(c.read(tripControllerProvider).trip.expenses, isEmpty);
@@ -448,7 +445,6 @@ void main() {
             payerId: 'you',
             splitWithMemberIds: const ['you'],
             createdAt: DateTime.now(),
-            inferenceSource: InferenceSource.manual,
           ),
         );
         n.renameMember('you', 'Pong');

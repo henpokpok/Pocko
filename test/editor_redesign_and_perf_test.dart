@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/core/theme/app_theme.dart';
 import 'package:travmate/core/utils/currency_helper.dart';
 import 'package:travmate/features/expenses/expense_editor_sheet.dart';
@@ -35,7 +34,6 @@ ExpenseItem _expense({
   customSplits: custom,
   receiptImageBase64: receipt,
   createdAt: DateTime(2026, 11, 16, 20, 30),
-  inferenceSource: InferenceSource.manual,
 );
 
 Future<void> _show(

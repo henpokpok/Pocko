@@ -8,9 +8,9 @@ import 'package:travmate/models/trip_member.dart';
 
 void main() {
   group('DebtSimplifier Tests', () {
-    final boss = TripMember(id: 'boss', name: 'Boss', isCurrentUser: true);
-    final may = TripMember(id: 'may', name: 'May');
-    final kong = TripMember(id: 'kong', name: 'Kong');
+    const boss = TripMember(id: 'boss', name: 'Boss', isCurrentUser: true);
+    const may = TripMember(id: 'may', name: 'May');
+    const kong = TripMember(id: 'kong', name: 'Kong');
     final members = [boss, may, kong];
 
     test('1. Standard 3-person equal split: Boss pays 1500 for all 3', () {

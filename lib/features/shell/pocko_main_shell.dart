@@ -261,7 +261,6 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
                 ),
                 child: const Center(
                   child: PockoMascot(
-                    mood: PockoMood.waving,
                     size: 30,
                     animate: false,
                   ),

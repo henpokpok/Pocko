@@ -281,7 +281,7 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
             key: const ValueKey('repay_amount'),
             controller: _amount,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: AppTheme.tabularNumberStyle(fontSize: 16),
+            style: AppTheme.tabularNumberStyle(),
             decoration: InputDecoration(
               labelText: 'Amount',
               prefixIcon: Padding(
@@ -309,7 +309,7 @@ class _RepaymentFormState extends ConsumerState<_RepaymentForm> {
                   }),
                 ),
               ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
+              prefixIconConstraints: const BoxConstraints(),
             ),
             onChanged: (_) => setState(() {
               _error = null;

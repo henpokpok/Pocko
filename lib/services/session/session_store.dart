@@ -92,8 +92,6 @@ class SessionStore {
       }),
     );
   }
-
-  Future<void> clearSession() => _prefs.remove(sessionKey);
 }
 
 /// `null` in tests and headless runs (nothing is persisted and the controller

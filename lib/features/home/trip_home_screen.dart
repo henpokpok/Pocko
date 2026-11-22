@@ -150,7 +150,6 @@ class TripHomeScreen extends ConsumerWidget {
                         style: AppTheme.tabularNumberStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
-                          color: AppTheme.textDark,
                         ),
                       ),
                     ),
@@ -169,7 +168,6 @@ class TripHomeScreen extends ConsumerWidget {
                           secondarySubtitle,
                           style: AppTheme.tabularNumberStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w700,
                             color: AppTheme.primaryEmeraldDark,
                           ),
                         ),
@@ -285,7 +283,7 @@ class TripHomeScreen extends ConsumerWidget {
       ),
     );
 
-    final top = tripState.topExpenses(3);
+    final top = tripState.topExpenses();
     final topExpensesCard = _TopExpensesCard(
       key: const ValueKey('top_expenses_card'),
       expenses: top,
@@ -370,8 +368,6 @@ class TripHomeScreen extends ConsumerWidget {
     return TabScrollBody(
       children: [
         AdaptiveColumns(
-          leftFlex: 1,
-          rightFlex: 1,
           left: [
             hero,
             const SizedBox(height: 18),
@@ -716,7 +712,6 @@ class _RecentRow extends StatelessWidget {
                 style: AppTheme.tabularNumberStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textDark,
                 ),
               ),
               if (secondary != null)

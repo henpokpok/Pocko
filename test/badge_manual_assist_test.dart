@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/enums/expense_category.dart';
-import 'package:travmate/core/enums/inference_source.dart';
 import 'package:travmate/features/expenses/expense_editor_sheet.dart';
 import 'package:travmate/features/shell/pocko_main_shell.dart';
 import 'package:travmate/features/trip/trip_controller.dart';
@@ -39,7 +38,6 @@ class _EditorHarness extends ConsumerWidget {
               payerId: 'you',
               splitWithMemberIds: const ['you', 'alex'],
               createdAt: DateTime.now(),
-              inferenceSource: InferenceSource.manual,
             ),
           );
           onResult(result);

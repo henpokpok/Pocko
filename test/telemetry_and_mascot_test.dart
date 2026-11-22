@@ -137,7 +137,6 @@ void main() {
           tester,
           const Center(
             child: PockoMascot(
-              mood: PockoMood.waving,
               size: 40,
               animate: false,
             ),
@@ -204,7 +203,7 @@ void main() {
     testWidgets('Exposes a semantic label for screen readers', (tester) async {
       await pumpPocko(
         tester,
-        const Center(child: PockoMascot(mood: PockoMood.sleepy, size: 80)),
+        const Center(child: PockoMascot(mood: PockoMood.sleepy)),
         size: const Size(200, 200),
       );
       expect(find.bySemanticsLabel('Pocko napping'), findsOneWidget);

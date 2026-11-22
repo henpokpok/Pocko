@@ -30,7 +30,6 @@ ExpenseItem _bill({
   splitWithMemberIds: const ['you', 'maya', 'liam'],
   customSplits: custom,
   createdAt: DateTime(2026, 11, 16, 20),
-  inferenceSource: InferenceSource.manual,
 );
 
 const _members = [
@@ -156,14 +155,10 @@ void main() {
       final result = await service.parseExpenseText(
         text: _sentence,
         mode: InferenceMode.preferOnDevice,
-        tripCurrency: 'JPY',
         memberNames: _names,
-        defaultPayer: 'You',
       );
       final ids = {'You': 'you', 'Maya': 'maya', 'Liam': 'liam'};
       final expenses = result.toExpenseItems(
-        defaultCurrency: 'JPY',
-        defaultPayerId: 'you',
         allMemberIds: ids.values.toList(),
         nameToIdMap: ids,
       );

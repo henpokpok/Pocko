@@ -14,11 +14,6 @@ class AppTheme {
   static const Color coralOwesBg = Color(0xFFFFE4E1);
   static const Color coralOwesText = Color(0xFFE11D48);
 
-  static const Color mascotMint = Color(0xFF6EE7B7);
-  static const Color mascotMintDark = Color(0xFF34D399);
-  static const Color mascotHatYellow = Color(0xFFFDE047);
-  static const Color mascotCheekPink = Color(0xFFFCA5A5);
-
   static const Color cardColor = Colors.white;
   static const Color textDark = Color(0xFF0F172A);
   static const Color textSlate = Color(0xFF475569);
@@ -52,9 +47,6 @@ class AppTheme {
 
   // Radii
   static final BorderRadius cardRadius = BorderRadius.circular(28);
-  static final BorderRadius sheetRadius = const BorderRadius.vertical(
-    top: Radius.circular(32),
-  );
   static final BorderRadius pillRadius = BorderRadius.circular(999);
 
   // Shadows
@@ -167,7 +159,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: cardRadius,
-          side: const BorderSide(color: Color(0xFFF1F5F9), width: 1),
+          side: const BorderSide(color: Color(0xFFF1F5F9)),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8),
       ),

@@ -76,10 +76,6 @@ class ExpenseItem {
     return {for (final id in ids) id: 1 / ids.length};
   }
 
-  /// One participant's share in [currency] (not converted).
-  double shareOf(String memberId, Iterable<String> memberIds) =>
-      (shareFractions(memberIds)[memberId] ?? 0) * amount;
-
   ExpenseItem copyWith({
     String? id,
     String? title,
