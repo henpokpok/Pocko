@@ -14,7 +14,7 @@ This report follows the work from the first real Firebase setup, through install
 | Area | Status |
 |---|---|
 | `flutter analyze` | 0 issues |
-| `flutter test` | **668 / 668 pass** (46 suites) |
+| `flutter test` | **669 / 669 pass** (46 suites) |
 | `flutter build web --no-tree-shake-icons` | clean |
 | `flutter build apk --debug` | clean |
 | `flutter build ios --debug --no-codesign` | clean |
@@ -22,7 +22,7 @@ This report follows the work from the first real Firebase setup, through install
 | iPad Air 11-inch (M4) | release build installed, opens from the home screen; voice capture + Gemini confirmed working by the user |
 | Cloud AI | `gemini-3.1-flash-lite` first, `gemini-3.8-flash` as fallback, through Firebase AI Logic on Web, Android and iOS |
 
-Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668.
+Test count over time: 431 → 486 → 503 → 540 → 541 → 545 → 606 → 616 → 617 → 635 → 640 → 642 → 663 → 668 → 669.
 
 ---
 
@@ -163,6 +163,8 @@ The built web app was run in the browser against the real Firebase project (App 
 - The floating bottom bar now sits above the 3-button / gesture system bar (`SafeArea`), as does everything laid out below it.
 - Offline voice: the default recognizer ("Speech Services by Google") has its own offline pack, separate from the Samsung keyboard's Voice input pack. On `error_language_unavailable` / `error_network` the app retries once with the on-device recognizer, then stops the mic **once** and shows a banner that opens the keyboard, whose own mic key works offline. No more flipping the mic on and off.
 - Gemini Nano: `FirebaseAIOnDeviceNotAvailableException: On-device model is not available` on the S26 simply meant the model was not downloaded. Settings now has **On-device AI (Gemini Nano)** with status and a one-time Download button (`FirebaseAIOnDevice.checkStatus()` / `download()` through the Android bridge).
+- **Mislabelled Nano answers:** the Firebase SDK prints its inference source as `On Device` / `In Cloud` (with a space). The Android bridge matched `ON_DEVICE`, so real Gemini Nano answers were reported as cloud. It now compares the SDK constant itself.
+- The Nano download tile keeps showing progress after you tap Download (it used to flip back to the button while AICore was still starting), and shows download errors.
 
 ---
 

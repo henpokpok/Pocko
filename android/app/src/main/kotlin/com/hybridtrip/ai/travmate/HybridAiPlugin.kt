@@ -9,6 +9,7 @@ import android.util.Base64
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.ai.InferenceMode
+import com.google.firebase.ai.InferenceSource
 import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.ondevice.DownloadStatus
@@ -345,7 +346,11 @@ class HybridAiPlugin : FlutterPlugin, MethodCallHandler {
             model.generateContent(prompt)
         }
 
-        val onDevice = response.inferenceSource.toString().contains("ON_DEVICE", ignoreCase = true)
+        // The SDK's InferenceSource prints as "On Device" / "In Cloud" (with a space), so compare the
+        // constant itself: a string match on "ON_DEVICE" labelled real Gemini Nano answers as cloud.
+        val source = response.inferenceSource
+        val onDevice = source == InferenceSource.ON_DEVICE ||
+            source.toString().replace(" ", "_").contains("ON_DEVICE", ignoreCase = true)
         return mapOf(
             "rawJson" to (response.text ?: "{}"),
             "inferenceSource" to if (onDevice) "on_device" else "in_cloud",

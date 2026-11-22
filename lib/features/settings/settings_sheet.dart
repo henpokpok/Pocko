@@ -267,6 +267,11 @@ class _OnDeviceAiTileState extends ConsumerState<OnDeviceAiTile> {
   OnDeviceAiStatus? _status;
   Timer? _poll;
 
+  /// When the user tapped Download. AICore can take a while to report
+  /// "downloading", so the tile keeps showing progress meanwhile instead of
+  /// flipping back to the button (which looked like "nothing happened").
+  DateTime? _requestedAt;
+
   @override
   void initState() {
     super.initState();
@@ -280,8 +285,21 @@ class _OnDeviceAiTileState extends ConsumerState<OnDeviceAiTile> {
   }
 
   Future<void> _refresh() async {
-    final s = await ref.read(hybridAiServiceProvider).onDeviceStatus();
+    var s = await ref.read(hybridAiServiceProvider).onDeviceStatus();
     if (!mounted) return;
+    final requested = _requestedAt;
+    final waiting =
+        requested != null &&
+        DateTime.now().difference(requested) < const Duration(minutes: 20);
+    if (s.isAvailable || (s.error != null && !s.isDownloading)) {
+      _requestedAt = null;
+    } else if (waiting && s.canDownload) {
+      s = OnDeviceAiStatus(
+        'downloading',
+        downloadedBytes: s.downloadedBytes,
+        totalBytes: s.totalBytes,
+      );
+    }
     setState(() => _status = s);
     _poll?.cancel();
     if (s.isDownloading) {
@@ -290,6 +308,7 @@ class _OnDeviceAiTileState extends ConsumerState<OnDeviceAiTile> {
   }
 
   Future<void> _download() async {
+    _requestedAt = DateTime.now();
     setState(() => _status = const OnDeviceAiStatus('downloading'));
     await ref.read(hybridAiServiceProvider).downloadOnDeviceModel();
     _poll?.cancel();
@@ -308,14 +327,16 @@ class _OnDeviceAiTileState extends ConsumerState<OnDeviceAiTile> {
     } else if (s.isDownloading) {
       subtitle = s.totalBytes > 0
           ? 'Downloading… ${_mb(s.downloadedBytes)} / ${_mb(s.totalBytes)} MB'
-          : 'Downloading… keep the app open.';
+          : 'Downloading… this can take several minutes. Keep the app open and stay online.';
     } else if (s.canDownload) {
-      subtitle =
-          'Not downloaded yet. Download it once (Wi-Fi recommended) to read '
-          'expenses with no internet.';
+      subtitle = s.error != null
+          ? 'Download did not finish: ${s.error}. Tap Download to retry.'
+          : 'Not downloaded yet. Download it once (Wi-Fi recommended) to read '
+                'expenses with no internet.';
     } else {
-      subtitle =
-          'Not available on this phone right now${s.error == null ? '' : ' (${s.error})'}.';
+      subtitle = s.error != null
+          ? 'Download problem: ${s.error}'
+          : 'Not available on this phone right now.';
     }
     return Container(
       key: const ValueKey('settings_on_device_ai'),

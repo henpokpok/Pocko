@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:travmate/core/enums/inference_source.dart';
@@ -531,6 +533,24 @@ void main() {
       expect(find.byKey(const ValueKey('settings_on_device_ai')), findsNothing);
     });
   });
+
+  test(
+    'Android labels a Gemini Nano answer as on-device (SDK prints "On Device")',
+    () {
+      final kt = File(
+        'android/app/src/main/kotlin/com/hybridtrip/ai/travmate/HybridAiPlugin.kt',
+      ).readAsStringSync();
+      expect(kt, contains('import com.google.firebase.ai.InferenceSource'));
+      expect(kt, contains('source == InferenceSource.ON_DEVICE'));
+      // The old check matched "ON_DEVICE" against "On Device" and never hit.
+      expect(
+        kt,
+        isNot(
+          contains('response.inferenceSource.toString().contains("ON_DEVICE"'),
+        ),
+      );
+    },
+  );
 
   test('InferenceSource is untouched by the failure path', () {
     expect(InferenceSource.values, contains(InferenceSource.onDevice));
