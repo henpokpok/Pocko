@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Fraction of the screen height a Pocko bottom sheet may occupy.
@@ -32,7 +34,12 @@ Future<T?> showPockoBottomSheet<T>({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (sheetContext) {
-      final inset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+      // The keyboard, or (keyboard closed) the system navigation bar: edge-to-
+      // edge Android draws under it, so the last button must clear it.
+      final inset = math.max(
+        MediaQuery.viewInsetsOf(sheetContext).bottom,
+        MediaQuery.paddingOf(sheetContext).bottom,
+      );
       final content = Builder(builder: builder);
       return Padding(
         padding: EdgeInsets.only(bottom: inset),
