@@ -235,9 +235,13 @@ class _PockoMainShellState extends ConsumerState<PockoMainShell>
         ? _tabNames[_currentTabIndex]
         : '';
     final tripName = slice.hasTrip ? slice.name : 'No trip yet';
-    final label = currentTab.isNotEmpty ? '$tripName • $currentTab' : tripName;
-
-    final narrow = MediaQuery.sizeOf(context).width < 360;
+    // Phones drop the "• Tab" suffix (the bottom bar already shows the tab) so
+    // the trip name stays readable, and below ~400 px the mascot badge goes too.
+    final width = MediaQuery.sizeOf(context).width;
+    final narrow = width < 400;
+    final label = currentTab.isNotEmpty && width >= 600
+        ? '$tripName • $currentTab'
+        : tripName;
     return SafeArea(
       bottom: false,
       child: Padding(

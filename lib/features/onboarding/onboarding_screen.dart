@@ -464,6 +464,9 @@ class _StoryPage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         // The illustration shrinks on short screens so text + buttons still fit.
+        // On very short phones (320x568) the story card trades its chips and a
+        // little type size for readable, fully visible copy.
+        final tiny = box.maxHeight < 360;
         final sceneHeight = compact || box.maxHeight < 430 ? 190.0 : 250.0;
         return SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -474,12 +477,12 @@ class _StoryPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 StoryIllustration(scene: data.scene, height: sceneHeight),
-                const SizedBox(height: 22),
+                SizedBox(height: tiny ? 12 : 22),
                 Text(
                       data.title,
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 27,
+                        fontSize: tiny ? 23 : 27,
                         height: 1.15,
                         fontWeight: FontWeight.w900,
                         color: AppTheme.textDark,
@@ -494,47 +497,48 @@ class _StoryPage extends StatelessWidget {
                       duration: 360.ms,
                       curve: Curves.easeOutCubic,
                     ),
-                const SizedBox(height: 10),
+                SizedBox(height: tiny ? 6 : 10),
                 Text(
                   data.body,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    height: 1.45,
+                    fontSize: tiny ? 13.5 : 15,
+                    height: tiny ? 1.35 : 1.45,
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textSlate,
                   ),
                 ).animate().fadeIn(delay: 220.ms, duration: 360.ms),
-                const SizedBox(height: 18),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (var i = 0; i < data.chips.length; i++)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          borderRadius: AppTheme.pillRadius,
-                        ),
-                        child: Text(
-                          data.chips[i],
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.primaryEmeraldDark,
+                SizedBox(height: tiny ? 0 : 18),
+                if (!tiny)
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (var i = 0; i < data.chips.length; i++)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
                           ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            borderRadius: AppTheme.pillRadius,
+                          ),
+                          child: Text(
+                            data.chips[i],
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.primaryEmeraldDark,
+                            ),
+                          ),
+                        ).animate().fadeIn(
+                          delay: Duration(milliseconds: 320 + 90 * i),
+                          duration: 300.ms,
                         ),
-                      ).animate().fadeIn(
-                        delay: Duration(milliseconds: 320 + 90 * i),
-                        duration: 300.ms,
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

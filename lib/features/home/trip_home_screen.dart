@@ -317,7 +317,7 @@ class TripHomeScreen extends ConsumerWidget {
               Tactile(
                 onTap: () => onNavigateTab?.call(PockoTabs.expenses),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                   child: Text(
                     'See all →',
                     style: GoogleFonts.plusJakartaSans(
@@ -481,7 +481,7 @@ class _TopExpensesCard extends StatelessWidget {
               Tactile(
                 onTap: onSeeAll,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                   child: Text(
                     'See all →',
                     style: GoogleFonts.plusJakartaSans(

@@ -56,7 +56,7 @@ class SquadBalanceCard extends StatelessWidget {
                 Tactile(
                   onTap: onManage,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                     child: Text(
                       trailingLabel,
                       style: GoogleFonts.plusJakartaSans(

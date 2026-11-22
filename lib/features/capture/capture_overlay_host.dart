@@ -72,7 +72,9 @@ class _CaptureOverlayHostState extends State<CaptureOverlayHost> {
       children: [
         RepaintBoundary(
           key: const ValueKey('capture_page'),
-          child: widget.page,
+          // While the capture UI is up, the page underneath is hidden from
+          // screen readers so its buttons cannot be reached through the modal.
+          child: ExcludeSemantics(excluding: widget.open, child: widget.page),
         ),
         if (_mounted)
           Positioned.fill(

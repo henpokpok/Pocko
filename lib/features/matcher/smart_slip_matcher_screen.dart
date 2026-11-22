@@ -539,14 +539,16 @@ class _SmartSlipMatcherScreenState
                       ),
                       const SizedBox(width: 4),
                       Flexible(
-                        child: Text(
-                          'Privacy Shield Active',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primaryEmeraldDark,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Privacy Shield Active',
+                            maxLines: 1,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryEmeraldDark,
+                            ),
                           ),
                         ),
                       ),
@@ -924,14 +926,16 @@ class _ActionButton extends StatelessWidget {
               Icon(icon, color: color, size: 18),
               const SizedBox(width: 8),
               Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textDark,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                 ),
               ),

@@ -17,7 +17,7 @@ void main() {
       await pumpPocko(tester, const PockoMainShell(), scaffold: false);
 
       expect(find.text('Pocko'), findsOneWidget);
-      expect(find.text('Tokyo Trip 🇯🇵 • Home'), findsOneWidget);
+      expect(find.text('Tokyo Trip 🇯🇵'), findsWidgets);
       for (final label in ['Home', 'Expenses', 'Matcher', 'Settle']) {
         expect(find.text(label), findsOneWidget);
       }
@@ -45,7 +45,7 @@ void main() {
         expect(find.text('CATEGORY BREAKDOWN'), findsOneWidget);
         expect(find.text('NET BALANCE SNAPSHOT'), findsOneWidget);
 
-        await tester.tap(find.text('Tokyo Trip 🇯🇵 • Settle'));
+        await tester.tap(find.text('Tokyo Trip 🇯🇵').first);
         await settle(tester, 600);
         expect(find.text('Travel Group'), findsOneWidget);
         expect(find.text('Group Code'), findsOneWidget);

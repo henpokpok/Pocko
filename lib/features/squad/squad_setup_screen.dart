@@ -330,13 +330,17 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text(
-                              'Group Ready\nfor Adventure!',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                height: 1.15,
-                                color: AppTheme.textDark,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Group Ready\nfor Adventure!',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.15,
+                                  color: AppTheme.textDark,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -379,9 +383,7 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      PockoMascot(
-                        size: PockoSizes.header(context),
-                      ),
+                      PockoMascot(size: PockoSizes.header(context)),
                     ],
                   ),
                 ),
@@ -675,19 +677,31 @@ class _SquadSetupScreenState extends ConsumerState<SquadSetupScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            'Group Code',
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 10,
-                                              color: AppTheme.textMuted,
-                                              fontWeight: FontWeight.w600,
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              'Group Code',
+                                              maxLines: 1,
+                                              style:
+                                                  GoogleFonts.plusJakartaSans(
+                                                    fontSize: 10,
+                                                    color: AppTheme.textMuted,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                             ),
                                           ),
-                                          Text(
-                                            tripState.squadCode,
-                                            style: AppTheme.tabularNumberStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w800,
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              tripState.squadCode,
+                                              maxLines: 1,
+                                              style:
+                                                  AppTheme.tabularNumberStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
                                             ),
                                           ),
                                         ],

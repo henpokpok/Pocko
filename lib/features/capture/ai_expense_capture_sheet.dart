@@ -1170,7 +1170,12 @@ class _AiExpenseCaptureSheetState extends ConsumerState<AiExpenseCaptureSheet>
         final heroSize = _step == CaptureStep.review
             ? math.min(baseHero, keyboardOpen ? 56.0 : 120.0)
             : (showingError ? math.min(baseHero, 110.0) : baseHero);
-        final showModes = avail >= 600 && _step == CaptureStep.input;
+        // Short phones (320x568 and similar) get the compact Voice / Type
+        // switch too, otherwise typing is unreachable there until the keyboard
+        // is already up.
+        final showModes =
+            _step == CaptureStep.input &&
+            (avail >= 600 || (avail >= 440 && !keyboardOpen));
         final showManual =
             _step == CaptureStep.input && !keyboardOpen && avail >= 540;
         // Below ~430 px of visible height the bar no longer fits beside the footer.
